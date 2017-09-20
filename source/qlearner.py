@@ -47,8 +47,6 @@ class RLAgent(object):
 class QLearner(RLAgent):
     ''' Class for a Q-learner that holds the values of Q(s,a)
     Attributes:
-        actions (list-like): the list of all possible actions it can take
-        current_state (object): to memorize the current_state it is observing        
         Q (dict): dict of key tuple (s,a) to float value Q(s,a)        
         epsilon (float): constant in epsilon-greedy policy
         learning_rate (float): the constant learning_rate
@@ -144,6 +142,7 @@ class QLearner(RLAgent):
             action (object): take a new action 
         '''
         if not self.last_action:
+            self.current_state = new_state
             return self.take_action()
         else:
             self.update_q(self.current_state, self.last_action, reward, new_state)

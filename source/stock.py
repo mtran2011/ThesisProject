@@ -4,20 +4,51 @@ import random
 class Stock(object):
     ''' Abstract base class for a stock object
     Attributes:
-        spot (float): the current spot price, must be rounded to 2 decimal points (cents)
+        price (float): the current spot price, must be rounded to 2 decimal points (cents)
     '''
     
     __metaclass__ = abc.ABCMeta
     
-    def __init__(self, spot):
-        if not spot:
-            raise ValueError('spot price input cannot be None')
-        self.spot = round(spot, 2)
-        
-    def simulate_price(self, mu, sigma, dt):
-        ''' Use dS = mu * dt + sigma * sqrt(dt) * standard normal N(0,1)
-        Based on dS = mu(.) * dt + sigma(.) * dW where var(dW) = dt        
+    def __init__(self, price):
+        if not price or price < 0:
+            raise ValueError('price input cannot be None or negative')
+        self.price = round(price, 2)
+    
+    def set_price(self, new_price):
+        ''' To allow exchange environment to set price
+        Args:
+            new_price (float): to set price
         '''
-        new_spot = self.spot + mu * dt + sigma * (dt**0.5) * random.gauss(0.0, 1.0)
-        self.spot = round(new_spot, 2)
-        return self.spot
+        if not new_price or new_price < 0:
+            raise ValueError('price input cannot be None or negative')
+        self.price = round(new_price, 2)
+    
+    @abc.abstractmethod
+    def simulate_price(self, dt):
+        ''' Simulate and update self.price over time step dt based on some internal models
+        Args:
+            dt (float): length of time step
+        Returns:
+            float: the new updated price
+        '''
+
+class OUStock(Stock):
+    ''' Stock with dS following an OU process
+    dS = kappa * (mu - S) * dt + sigma * dW where var(dW) = dt
+    Attributes:
+        kappa (float): mean reversion speed
+        mu (float): mean reversion level
+        sigma (float): volatility
+    '''
+    def __init__(self, price, kappa, mu, sigma):
+        super().__init__(price)
+        self.kappa = kappa
+        self.mu = mu
+        self.sigma = sigma
+        
+    def simulate_price(self, dt):
+        dW = dt**0.5 * random.gauss(0.0, 1.0)
+        new_price = self.price + self.kappa * (self.mu - self.price) * dt + self.sigma * dW
+        self.price = round(new_price, 2)
+        return self.price
+    
