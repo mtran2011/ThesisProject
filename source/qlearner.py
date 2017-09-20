@@ -120,27 +120,13 @@ class QLearner(RLAgent):
         return new_q
     
     # Override base class abstractmethod
-    def take_action(self):
-        ''' Deliver an action based on current_state it is observing
-        Use epsilon-greedy to take an action
-        Returns:
-            action (object): take an action based on current_state it is observing
-        '''        
+    def take_action(self):        
         action = self.find_action_greedily(self.current_state)
         self.last_action = action
         return action
     
     # Override base class abstractmethod
-    def learn(self, reward, new_state):
-        ''' Get a reward and see a new_state. Use this to learn. 
-        Update current_state attribute to new_state. 
-        Then take_action based on new current_state
-        Args:
-            reward (float): the reward seen after the previous action
-            new_state (object): the new_state seen after the previous action
-        Returns:
-            action (object): take a new action 
-        '''
+    def learn(self, reward, new_state):        
         if not self.last_action:
             self.current_state = new_state
             return self.take_action()

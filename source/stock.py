@@ -40,12 +40,14 @@ class OUStock(Stock):
         mu (float): mean reversion level
         sigma (float): volatility
     '''
+    
     def __init__(self, price, kappa, mu, sigma):
         super().__init__(price)
         self.kappa = kappa
         self.mu = mu
         self.sigma = sigma
-        
+    
+    # Override base class abstractmethod    
     def simulate_price(self, dt):
         dW = dt**0.5 * random.gauss(0.0, 1.0)
         new_price = self.price + self.kappa * (self.mu - self.price) * dt + self.sigma * dW
