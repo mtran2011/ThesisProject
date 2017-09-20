@@ -1,7 +1,7 @@
 import random
 
 '''
-Copy with changes from github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
+Based on github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
 '''
 
 class QMatrix(object):
@@ -33,17 +33,17 @@ class QMatrix(object):
         '''
         return self.Q.get((state, action), 0)
     
-    def find_action_greedily(self, state, rand_epsilon=True, return_q=False):
+    def find_action_greedily(self, state, use_epsilon=True, return_q=False):
         ''' Given the current state, find the best action using epsilon-greedy
         Args:
             state (object): the current state
-            rand_epsilon (bool): True if the randomization using epsilon is to be used
+            use_epsilon (bool): True if the randomization using epsilon is to be used
             return_q (bool): True to return the greedy value of Q(state, a)
         Returns: 
             object: the action found by epsilon-greedy
             float: the value q(s,a) for current state found by epsilon-greedy
         '''        
-        if random.random() < self.epsilon and rand_epsilon:
+        if random.random() < self.epsilon and use_epsilon:
             # with probability epsilon, choose from all actions with equal chance
             best_action = random.choice(self.actions)
             max_q = self.get_q(state, best_action)
@@ -76,7 +76,7 @@ class QMatrix(object):
         '''
         old_q = self.get_q(current_state, action)
         # find the max over all {a} of Q(new_state, a)
-        _, max_q = find_action_greedily(new_state, rand_epsilon=False, return_q=True)
+        _, max_q = find_action_greedily(new_state, use_epsilon=False, return_q=True)
         new_q = old_q + self.learning_rate * (reward + self.discount_factor * max_q - old_q)
         self.Q[(current_state, action)] = new_q
         return new_q
