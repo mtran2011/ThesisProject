@@ -10,18 +10,18 @@ class Stock(object):
     __metaclass__ = abc.ABCMeta
     
     def __init__(self, price):
-        if not price or price < 0:
-            raise ValueError('price input cannot be None or negative')
-        self.price = round(price, 2)
+        if not price:
+            raise ValueError('price input cannot be None')
+        self.price = round(max(0,price), 2)
     
     def set_price(self, new_price):
         ''' To allow exchange environment to set price
         Args:
             new_price (float): to set price
         '''
-        if not new_price or new_price < 0:
-            raise ValueError('price input cannot be None or negative')
-        self.price = round(new_price, 2)
+        if not new_price:
+            raise ValueError('price input cannot be None')
+        self.price = round(max(0,new_price), 2)
     
     @abc.abstractmethod
     def simulate_price(self, dt):
@@ -51,6 +51,5 @@ class OUStock(Stock):
     def simulate_price(self, dt):
         dW = dt**0.5 * random.gauss(0.0, 1.0)
         new_price = self.price + self.kappa * (self.mu - self.price) * dt + self.sigma * dW
-        self.price = round(new_price, 2)
-        return self.price
-    
+        self.price = round(max(0,new_price), 2)
+        return self.price    
