@@ -8,3 +8,9 @@ class StockTradingEnvironment(object):
         agent (RLAgent): 
         exchange (StockExchange): 
     '''
+	
+	
+	
+	
+	
+	
