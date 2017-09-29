@@ -15,6 +15,10 @@ class Stock(object):
         self._price = round(max(0,price), 2)
     
 	def get_price(self):
+		'''
+		Returns:
+			float: the current _price
+		'''
 		return self._price
 	
     def set_price(self, price):
