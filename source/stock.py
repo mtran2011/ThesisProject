@@ -4,7 +4,7 @@ import random
 class Stock(object):
     ''' Abstract base class for a stock object
     Attributes:
-        price (float): the current spot price, must be rounded to 2 decimal points (cents)
+        _price (float): the current spot price in USD, Must Be Rounded to 2 decimal points
     '''
     
     __metaclass__ = abc.ABCMeta
@@ -12,20 +12,23 @@ class Stock(object):
     def __init__(self, price):
         if not price:
             raise ValueError('price input cannot be None')
-        self.price = round(max(0,price), 2)
+        self._price = round(max(0,price), 2)
     
-    def set_price(self, new_price):
-        ''' To allow exchange environment to set price
+	def get_price(self):
+		return self._price
+	
+    def set_price(self, price):
+        ''' 
         Args:
-            new_price (float): to set price
+            price (float): to set price
         '''
-        if not new_price:
+        if not price:
             raise ValueError('price input cannot be None')
-        self.price = round(max(0,new_price), 2)
+        self._price = round(max(0,price), 2)
     
     @abc.abstractmethod
     def simulate_price(self, dt):
-        ''' Simulate and update self.price over time step dt based on some internal models
+        ''' Simulate and update self._price over time step dt based on some internal models
         Args:
             dt (float): length of time step
         Returns:
@@ -50,6 +53,6 @@ class OUStock(Stock):
     # Override base class abstractmethod    
     def simulate_price(self, dt):
         dW = dt**0.5 * random.gauss(0.0, 1.0)
-        new_price = self.price + self.kappa * (self.mu - self.price) * dt + self.sigma * dW
-        self.price = round(max(0,new_price), 2)
-        return self.price    
+        new_price = self._price + self.kappa * (self.mu - self._price) * dt + self.sigma * dW
+        self._price = round(max(0,new_price), 2)
+        return self._price    
