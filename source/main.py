@@ -15,7 +15,10 @@ def main():
 		calculate reward = 1 + transaction cost = 0.99
 		give agent reward, new state=(price=9, owned=200)
 		
-	agent update q using reward=0.99, newstate
-	
-	
+	agent update q using reward=0.99, newstate		
 	'''
+	
+	
+	
+if __name__ == '__main__':
+	main()

@@ -26,15 +26,15 @@ class RLAgent(object):
     def learn(self, reward, new_state):
         ''' Get a reward and see a new_state. Use this to update Q(_last_state, _last_action). 
         Find the best_action based on new_state
-		Update _last_state <- new_state
-		Update _last_action <- best_action        
+        Update _last_state <- new_state
+        Update _last_action <- best_action        
         Args:
             reward (float): the reward seen after the previous action
             new_state (object): the new_state seen after the previous action
         Returns:
             best_action (object): take a new action 
         '''
-		
+        
 class QLearner(RLAgent):
     ''' Class for a Q-learner that holds the values of Q(s,a)
     Attributes:
@@ -45,7 +45,7 @@ class QLearner(RLAgent):
     '''
     
     def __init__(self, actions, epsilon=0.1, learning_rate=0.1, discount_factor=0.9999):        
-		super().__init__(actions)
+        super().__init__(actions)
         self._Q = dict()
         self._epsilon = epsilon
         self._learning_rate = learning_rate
@@ -78,10 +78,10 @@ class QLearner(RLAgent):
         else:
             # choose a = arg max {action} of Q(state, action)
             q_values = [self._get_q(state, a) for a in self._actions]
-			max_q = max(q_values)
-			best_action = self._actions[q_values.index(max_q)]
+            max_q = max(q_values)
+            best_action = self._actions[q_values.index(max_q)]
         
-		if return_q:
+        if return_q:
             return best_action, max_q
         else:
             return best_action                
@@ -109,12 +109,12 @@ class QLearner(RLAgent):
     def learn(self, reward, new_state):
         if not self._last_action or not self._last_state:
             action = self._find_action_greedily(new_state)
-			self._last_action = action			
-			self._last_state = new_state
+            self._last_action = action          
+            self._last_state = new_state
             return action
         else:
             self._update_q(self._last_state, self._last_action, reward, new_state)
             action = self._find_action_greedily(new_state)
-			self._last_action = action			
-			self._last_state = new_state
+            self._last_action = action          
+            self._last_state = new_state
             return action 

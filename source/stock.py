@@ -9,35 +9,35 @@ class Stock(object):
     
     __metaclass__ = abc.ABCMeta
     
-	def __init__(self, price):
-		if not price:
-			raise ValueError('price input cannot be None')
-		self._price = round(max(0,price), 2)
+    def __init__(self, price):
+        if not price:
+            raise ValueError('price input cannot be None')
+        self._price = round(max(0,price), 2)
 
-	def get_price(self):
-		'''
-		Returns:
-			float: the current _price
-		'''
-		return self._price
+    def get_price(self):
+        '''
+        Returns:
+            float: the current _price
+        '''
+        return self._price
 
-	def set_price(self, price):
-		''' 
-		Args:
-			price (float): to set price
-		'''
-		if not price:
-			raise ValueError('price input cannot be None')
-		self._price = round(max(0,price), 2)
+    def set_price(self, price):
+        ''' 
+        Args:
+            price (float): to set price
+        '''
+        if not price:
+            raise ValueError('price input cannot be None')
+        self._price = round(max(0,price), 2)
 
-	@abc.abstractmethod
-	def simulate_price(self, dt):
-		''' Simulate and update self._price over time step dt based on some internal models
-		Args:
-			dt (float): length of time step
-		Returns:
-			float: the new updated price
-		'''
+    @abc.abstractmethod
+    def simulate_price(self, dt):
+        ''' Simulate and update self._price over time step dt based on some internal models
+        Args:
+            dt (float): length of time step
+        Returns:
+            float: the new updated price
+        '''
 
 class OUStock(Stock):
     ''' Stock with dS following an OU process
