@@ -1,12 +1,12 @@
 from stock import OUStock
-
-def run()
+from exchange import StockExchange
+from qlearner import QLearner, QMatrix
 
 def main():    
     stock = OUStock(10.52, kappa=0.1, mu=16.0, sigma=0.3/252)
     lot, tick = 100, 0.1    
     actions = list(range(-10*lot, 11*lot, lot))
-    qlearner = QMatrix(actions)    
+    learner = QMatrix(actions)    
     exchange = StockExchange(stock, lot, tick, impact=0)       
     
     reward = 0
@@ -17,7 +17,7 @@ def main():
     
     # for initial training and burn in
     for i in range(1000000):
-        order = qlearner.learn(reward, state)
+        order = learner.learn(reward, state)
         
         # when the exchange execute, it makes an impact on stock price
         transaction_cost = exchange.execute(order)        
