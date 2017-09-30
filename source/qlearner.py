@@ -5,7 +5,7 @@ import random
 Based on github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
 '''
 
-class RLAgent(object):
+class QLearner(object):
     ''' Abstract base class for a reinforcement learning agent
     Attributes:
         _actions (list): the list of all possible actions it can take
@@ -35,7 +35,7 @@ class RLAgent(object):
             best_action (object): take a new action 
         '''
         
-class QLearner(RLAgent):
+class QMatrix(QLearner):
     ''' Class for a Q-learner that holds the values of Q(s,a)
     Attributes:
         _Q (dict): dict of key tuple (s,a) to float value Q(s,a)        
