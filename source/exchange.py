@@ -8,16 +8,18 @@ class StockExchange(object):
         lot (int): the lot size 
         tick (float): the tick measured in USD
         impact (float): must be between 0 (all temporary impact) and 1 (full permanent impact)
-        num_shares_owned (int): the position the agent has at this exchange        
+        num_shares_owned (int): the position the agent has at this exchange
+        max_holding (int): the max number of shares the agent can long or short in cumulative position
     '''
     
-    def __init__(self, stock, lot=100, tick=0.1, impact=0):
+    def __init__(self, stock, lot=100, tick=0.1, impact=0, max_holding=100000):
         if impact < 0 or impact > 1:
             raise ValueError('impact must be a float between 0 and 1')
         self.stock = stock
         self.lot = lot
-        self.tick = tick
-        self.impact = impact        
+        self.tick = tick        
+        self.impact = impact
+        self.max_holding = max_holding
         self.num_shares_owned = 0
     
     def execute(self, order):
@@ -29,6 +31,7 @@ class StockExchange(object):
         '''
         
         # First execute order using stepping up of price based on lot, tick
+        # When executing the order, if it pushes num_shares_owned above max_holding, only execute in part
         # Update num_shares_owned
         # Calculate total amount paid or received by the agent for this order
         
