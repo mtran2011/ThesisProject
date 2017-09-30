@@ -20,7 +20,7 @@ class StockExchange(object):
         self.impact = impact        
         self.num_shares_owned = 0
     
-    def execute(order):
+    def execute(self, order):
         ''' Execute the order, set the stock price based on self.impact, then calculate transaction cost        
         Args:
             order (int): how much shares to buy (positive) or sell (negative)
@@ -36,7 +36,7 @@ class StockExchange(object):
         
         # Return transaction cost based on updated stock price and total amount paid
 
-    def simulate_stock_price(dt=1.0):
+    def simulate_stock_price(self, dt=1.0):
         '''
         Args:
             dt (float): length of time step
@@ -46,6 +46,8 @@ class StockExchange(object):
         '''
         
         # call stock.simulate_price(dt) 
-        new_price = 
+        old_price = self.stock.get_price()
+        new_price = self.stock.simulate_price(dt)
+        return new_price, num_shares_owned * (new_price - old_price)
         
         
