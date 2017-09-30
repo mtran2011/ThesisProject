@@ -44,7 +44,7 @@ class QLearner(RLAgent):
         _discount_factor (float): the constant discount_factor of future rewards        
     '''
     
-    def __init__(self, actions, epsilon=0.1, learning_rate=0.1, discount_factor=0.9999):        
+    def __init__(self, actions, epsilon=0.1, learning_rate=0.001, discount_factor=0.999):        
         super().__init__(actions)
         self._Q = dict()
         self._epsilon = epsilon
