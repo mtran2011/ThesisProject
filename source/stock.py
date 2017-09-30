@@ -31,7 +31,7 @@ class Stock(object):
         self._price = round(max(0,price), 2)
 
     @abc.abstractmethod
-    def simulate_price(self, dt):
+    def simulate_price(self, dt=1.0):
         ''' Simulate and update self._price over time step dt based on some internal models
         Args:
             dt (float): length of time step
@@ -54,8 +54,8 @@ class OUStock(Stock):
         self.mu = mu
         self.sigma = sigma
     
-    # Override base class abstractmethod    
-    def simulate_price(self, dt):
+    # Override base class abstractmethod
+    def simulate_price(self, dt=1.0):
         dW = dt**0.5 * random.gauss(0.0, 1.0)
         new_price = self._price + self.kappa * (self.mu - self._price) * dt + self.sigma * dW
         self._price = round(max(0,new_price), 2)
