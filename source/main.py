@@ -44,12 +44,12 @@ def run_stock_agent(stock, learner, exchange, util_const=1e-4, nrun=100000, repo
     else:
         return None
 
-def main():    
-    stock = OUStock(10.52, kappa=0.3, mu=16.0, sigma=0.01)
+def main():
+    stock = OUStock(price=10.52, kappa=0.2, mu=20.0, sigma=0.01, tick=0.1, band=1000)
     lot = 100
     actions = list(range(-5*lot, 6*lot, lot))
-    learner = QMatrix(actions)
-    exchange = StockExchange(stock, lot=lot)        
+    learner = QMatrix(actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
+    exchange = StockExchange(stock, lot=lot, impact=1, max_holding=1000)
     
     # for initial training and burn in
     run_stock_agent(stock, learner, exchange, nrun=int(1e7))    
