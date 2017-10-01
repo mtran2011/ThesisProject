@@ -10,13 +10,15 @@ Xiaohe Yu
 Gordon Ritter, gordon.ritter@gmail.com
 
 4. A two or three sentence statement of the problem 
-
+Test the effectivenss of reinforcement learning(Q-learning)in capturing arbitrage opportunities and optimal hedging strategies when trading cost
+and investors' risk preference are taken into consideration. 
 
 5. A two or three sentence statement of the approach you intend to take 
-
+Use controlled simulation which permits arbitrage opportunities and verify the built q-learner can capture this opportunity without prior information.  
 
 6. A two or three sentence statement of your criteria of success 
-
+Successfully implement the strategy and prove the conclusion in Gordon's paper. 
 
 7. A list of references you intend to consult. 
 Several papers from Gordon Ritter, and the papers mentioned and referenced in Gordon Ritter's paper, the book the Elements of Statistical Learning
+'Machine Learning For Trading' By Gordon Ritter
