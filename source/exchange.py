@@ -15,7 +15,7 @@ class StockExchange(object):
     def __init__(self, stock, lot=100, tick=0.1, impact=0, max_holding=100000):
         if impact < 0 or impact > 1:
             raise ValueError('impact must be a float between 0 and 1')
-        if lot < 0 or tick < 0 or max_holding:
+        if lot < 0 or tick < 0 or max_holding < 0:
             raise ValueError('lot, tick and max_holding must be positive')        
         self.stock = stock
         self.lot = lot
@@ -34,6 +34,9 @@ class StockExchange(object):
         
         # First execute order using stepping up of price based on lot, tick        
         # Calculate total amount paid or received by the agent for this order        
+        if order == 0:
+            return 0
+        
         buy_or_sell = order / abs(order)
         
         # When executing the order, if it pushes num_shares_owned above max_holding, only execute in part
@@ -78,6 +81,6 @@ class StockExchange(object):
         # call stock.simulate_price(dt) 
         old_price = self.stock.get_price()
         new_price = self.stock.simulate_price(dt)
-        return new_price, num_shares_owned * (new_price - old_price)
+        return new_price, self.num_shares_owned * (new_price - old_price)
         
         

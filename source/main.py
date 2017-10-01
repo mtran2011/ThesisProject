@@ -36,8 +36,8 @@ def run_stock_agent(stock, learner, exchange, util_const=1e-4, nrun=100000, repo
         
         if report:
             wealths.append(cumulative_wealth)
-        if i % 100000 == 0:
-            print('finished 100k run')
+        if i % 1000000 == 0:
+            print('finished 1mil run')
     
     if report:
         return wealths
@@ -52,13 +52,13 @@ def main():
     exchange = StockExchange(stock, lot=lot)        
     
     # for initial training and burn in
-    run_stock_agent(stock, learner, exchange, nrun=int(1e7))    
+    run_stock_agent(stock, learner, exchange, nrun=int(1e8))    
     # for graphing pnl after training, run again the above 100k times
-    wealths = run_stock_agent(stock, learner, exchange)
+    wealths = run_stock_agent(stock, learner, exchange, report=True)
     
     plt.figure()
     plt.plot(range(len(wealths)), wealths)
-    plt.title('Simple agent performance after initial training of 10 million steps')
+    plt.title('Agent performance in 100k steps after training of 100 million steps')
     plt.xlabel('iterations')
     plt.ylabel('cumulative wealth')
     plt.savefig('first test.png')
