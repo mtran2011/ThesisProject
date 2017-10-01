@@ -32,12 +32,22 @@ class StockExchange(object):
         
         # First execute order using stepping up of price based on lot, tick
         # When executing the order, if it pushes num_shares_owned above max_holding, only execute in part
-        # Update num_shares_owned
         # Calculate total amount paid or received by the agent for this order
-        
         # Based on self.impact, set the new stock price
+        buyOrSell = order / abs(order)
+        sharesLeft = abs(order)
+        amountPaid = 0
+        while sharesLeft > 0:
+            amountPaid = amountPaid + self.stock.get_price() * min(lot, sharesLeft) * buyOrSell
+            sharesLeft = sharesLeft - min(lot, sharesLeft)
+            self.stock.set_price(self.stock.get_price + min(sharesLeft/lot, 1) * tick * buyOrSell)
+           
+        
+        # Update num_shares_owned ## question: lower bound for shorting?
+        self.num_shares_owned = min(self.num_shares_owned + order, self.max_holding)
         
         # Return transaction cost based on updated stock price and total amount paid
+        # definition of transaction cost?
 
     def simulate_stock_price(self, dt=1.0):
         '''
