@@ -2,7 +2,7 @@ from stock import Stock, OUStock
 
 class StockExchange(object):
     ''' A class to execute buy or sell order for a single stock 
-    For a lot size of 100 shares and tick of 0.01, an order to buy 120 shares will have the last 20 executed at price + 0.01
+    For a lot size of 100 shares and tick of 0.1, an order to buy 120 shares will have the last 20 executed at price + 0.1
     Attributes:
         stock (Stock): the only stock on this exchange
         lot (int): the lot size 
@@ -12,14 +12,14 @@ class StockExchange(object):
         max_holding (int): the max number of shares the agent can long or short in cumulative position
     '''
     
-    def __init__(self, stock, lot=100, tick=0.1, impact=0, max_holding=100000):
+    def __init__(self, stock, lot=100, impact=0, max_holding=1000):
         if impact < 0 or impact > 1:
             raise ValueError('impact must be a float between 0 and 1')
-        if lot < 0 or tick < 0 or max_holding < 0:
-            raise ValueError('lot, tick and max_holding must be positive')        
+        if lot < 0 or max_holding < 0:
+            raise ValueError('lot and max_holding must be positive')        
         self.stock = stock
-        self.lot = lot
-        self.tick = tick        
+        self.tick = stock.tick
+        self.lot = lot        
         self.impact = impact
         self.max_holding = max_holding
         self.num_shares_owned = 0

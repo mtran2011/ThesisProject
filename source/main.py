@@ -21,7 +21,7 @@ def run_stock_agent(stock, learner, exchange, util_const=1e-4, nrun=100000, repo
     cumulative_wealth = 0
     wealths = []
     
-    for i in range(nrun):
+    for i in range(1,nrun+1):
         order = learner.learn(reward, state)        
         # when the exchange execute, it makes an impact on stock price
         transaction_cost = exchange.execute(order)        
@@ -45,20 +45,20 @@ def run_stock_agent(stock, learner, exchange, util_const=1e-4, nrun=100000, repo
         return None
 
 def main():    
-    stock = OUStock(10.52, kappa=0.3, mu=16.0, sigma=0.25/252)
+    stock = OUStock(10.52, kappa=0.3, mu=16.0, sigma=0.01)
     lot = 100
-    actions = list(range(-10*lot, 11*lot, lot))
+    actions = list(range(-5*lot, 6*lot, lot))
     learner = QMatrix(actions)
     exchange = StockExchange(stock, lot=lot)        
     
     # for initial training and burn in
-    run_stock_agent(stock, learner, exchange, nrun=int(1e8))    
+    run_stock_agent(stock, learner, exchange, nrun=int(1e7))    
     # for graphing pnl after training, run again the above 100k times
     wealths = run_stock_agent(stock, learner, exchange, report=True)
     
     plt.figure()
     plt.plot(range(len(wealths)), wealths)
-    plt.title('Agent performance in 100k steps after training of 100 million steps')
+    plt.title('Agent performance in 100k steps after training of 10 million steps')
     plt.xlabel('iterations')
     plt.ylabel('cumulative wealth')
     plt.savefig('first test.png')
