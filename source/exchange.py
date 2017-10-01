@@ -43,15 +43,13 @@ class StockExchange(object):
         transactionCost = 0
         sharesLeft = abs(order)
         amountPaid = 0
-        
         while sharesLeft > 0:
             amountPaid = amountPaid + self.stock.get_price() * min(lot, sharesLeft) * buyOrSell
             sharesLeft = sharesLeft - min(lot, sharesLeft)
             #update transaction cose
-            transactionCost = min(lot, sharesLeft) * buyOrSell * tick + min(lot, sharesLeft) * buyOrSell / lot * tick
+            transactionCost = min(lot, sharesLeft) * buyOrSell * tick + (min(lot, sharesLeft) * buyOrSell)**2 / lot * tick
             #update price 
             self.stock.set_price(self.stock.get_price + min(sharesLeft/lot, 1) * tick * buyOrSell)
-        
         # Update num_shares_owned
         self.num_shares_owned = min(self.num_shares_owned + order, self.max_holding)
         
