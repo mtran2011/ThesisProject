@@ -1,8 +1,8 @@
 from stock import Stock, OUStock
 
 class StockExchange(object):
-    '''    
-    For a lot size of 100 shares and tick of 0.01, an order of 120 shares will have the last 20 executed at price + 0.01
+    ''' A class to execute buy or sell order for a single stock 
+    For a lot size of 100 shares and tick of 0.01, an order to buy 120 shares will have the last 20 executed at price + 0.01
     Attributes:
         stock (Stock): the only stock on this exchange
         lot (int): the lot size 
@@ -15,6 +15,8 @@ class StockExchange(object):
     def __init__(self, stock, lot=100, tick=0.1, impact=0, max_holding=100000):
         if impact < 0 or impact > 1:
             raise ValueError('impact must be a float between 0 and 1')
+        if lot < 0 or tick < 0 or max_holding:
+            raise ValueError('lot, tick and max_holding must be positive')        
         self.stock = stock
         self.lot = lot
         self.tick = tick        
@@ -25,35 +27,44 @@ class StockExchange(object):
     def execute(self, order):
         ''' Execute the order, set the stock price based on self.impact, then calculate transaction cost        
         Args:
-            order (int): how much shares to buy (positive) or sell (negative)
+            order (int): how many shares to buy (positive) or sell (negative)
         Returns:
             float: transaction cost
         '''
         
-        # First execute order using stepping up of price based on lot, tick
-        # When executing the order, if it pushes num_shares_owned above max_holding, only execute in part
-        # Calculate total amount paid or received by the agent for this order
-        # Based on self.impact, set the new stock price
-        buyOrSell = order / abs(order)
-        #if it pushes num_shares_owned above max_holding, only execute in part
-        if (self.num_shares_owned + order > self.max_holding):
-            order =  self.max_holding - self.num_shares_owned
-        if (self.num_shares_owned + order < -self.max_holding):
-            order = -self.max_holding - self.num_shares_owned
-        transactionCost = 0
-        sharesLeft = abs(order)
-        amountPaid = 0
-        while sharesLeft > 0:
-            amountPaid = amountPaid + self.stock.get_price() * min(lot, sharesLeft) * buyOrSell
-            sharesLeft = sharesLeft - min(lot, sharesLeft)
-            #update transaction cose
-            transactionCost = min(lot, sharesLeft) * buyOrSell * tick + (min(lot, sharesLeft) * buyOrSell)**2 / lot * tick
-            #update price 
-            self.stock.set_price(self.stock.get_price + min(sharesLeft/lot, 1) * tick * buyOrSell)
-        # Update num_shares_owned
-        self.num_shares_owned = min(self.num_shares_owned + order, self.max_holding)
+        # First execute order using stepping up of price based on lot, tick        
+        # Calculate total amount paid or received by the agent for this order        
+        buy_or_sell = order / abs(order)
         
-        return  transactionCost
+        # When executing the order, if it pushes num_shares_owned above max_holding, only execute in part
+        if self.num_shares_owned + order > self.max_holding:
+            order =  self.max_holding - self.num_shares_owned
+        if self.num_shares_owned + order < -self.max_holding:
+            order = -self.max_holding - self.num_shares_owned
+        
+        shares_left = abs(order)
+        transaction_cost = 0        
+        amount_paid = 0
+        # the first bid or offer is 1 tick from stock.get_price() which is assumed to be a mid price
+        price_to_execute = self.stock.get_price() + self.tick
+        
+        while shares_left > 0:
+            shares_to_execute = min(self.lot, shares_left)        
+            amount_paid += price_to_execute * shares_to_execute * buy_or_sell
+            shares_left -= shares_to_execute
+            price_to_execute += self.tick * buy_or_sell
+            
+            # update transaction cost
+            spread_cost = shares_to_execute / self.lot * self.tick
+            impact_cost = (shares_to_execute / self.lot)**2 * self.tick
+            transaction_cost += spread_cost + impact_cost
+        
+        # update num_shares_owned
+        self.num_shares_owned += order
+        # Based on self.impact, set the new stock price
+        self.stock.set_price(self.stock.get_price() + self.impact * (price_to_execute - self.stock.get_price()))
+        
+        return transaction_cost
 
     def simulate_stock_price(self, dt=1.0):
         '''
