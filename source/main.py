@@ -45,20 +45,20 @@ def run_stock_agent(stock, learner, exchange, util_const=1e-4, nrun=100000, repo
         return None
 
 def main():
-    stock = OUStock(price=10.52, kappa=0.2, mu=20.0, sigma=0.01, tick=0.1, band=1000)
+    stock = OUStock(price=10.52, kappa=0.1, mu=20.0, sigma=0.2, tick=0.1, band=1000)
     lot = 100
     actions = list(range(-5*lot, 6*lot, lot))
-    learner = QMatrix(actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
+    learner = QMatrix(actions, epsilon=0.1, learning_rate=0.1, discount_factor=0.999)
     exchange = StockExchange(stock, lot=lot, impact=1, max_holding=1000)
     
     # for initial training and burn in
-    run_stock_agent(stock, learner, exchange, nrun=int(1e7))    
+    run_stock_agent(stock, learner, exchange, nrun=int(1e8))    
     # for graphing pnl after training, run again the above 100k times
-    wealths = run_stock_agent(stock, learner, exchange, report=True)
+    wealths = run_stock_agent(stock, learner, exchange, nrun=10000, report=True)
     
     plt.figure()
     plt.plot(range(len(wealths)), wealths)
-    plt.title('Agent performance in 100k steps after training of 10 million steps')
+    plt.title('Agent performance in 10k steps after training of 100 million steps')
     plt.xlabel('iterations')
     plt.ylabel('cumulative wealth')
     plt.savefig('first test.png')
