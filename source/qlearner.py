@@ -1,5 +1,6 @@
 import abc
 import random
+import math
 import numpy as np
 from keras.models import Sequential
 
@@ -17,9 +18,8 @@ class QLearner(object):
     __metaclass__ = abc.ABCMeta
     
     def __init__(self, actions):
-        if not actions:
-            raise ValueError('list of possible actions cannot be empty')
-                
+        if not actions or not isinstance(actions, list):
+            raise ValueError('actions cannot be empty and must be a list')                
         self._actions = actions
         self._last_action = None
         self._last_state = None        
@@ -90,7 +90,7 @@ class QMatrix(QLearner):
         if return_q:
             return best_action, max_q
         else:
-            return best_action                
+            return best_action
     
     def _update_q(self, state, action, reward, new_state):
         ''' Update Q(state, action) after observing reward and new_state
@@ -132,7 +132,7 @@ class DQNLearner(QLearner):
         _epsilon (float): constant in epsilon-greedy policy
         _learning_rate (float): the constant learning_rate
         _discount_factor (float): the constant discount_factor of future rewards
-        _replay (list): list of tuples (s,a,r,s') to store experience replay
+        _memory (list): list of tuples (s,a,r,s') to store for experience replay
         _model (Sequential): a network using keras Sequential
     '''
     
@@ -141,7 +141,7 @@ class DQNLearner(QLearner):
         self._epsilon = epsilon
         self._learning_rate = learning_rate
         self._discount_factor = discount_factor
-        self._replay = []
+        self._memory = []
         self._model = model # todo
         
     # Override base class abstractmethod
@@ -155,12 +155,74 @@ class DQNLearner(QLearner):
             max_q = None
             if return_q:
                 # get all the Q(s,a) for this state
+                # model.predict(X) where X is a n x p array of n obs, each ob having p features
+                # model.predict(X) gives an array of predictions; each prediction is an array of size k
                 q_values = self._model.predict(state)[0]
                 max_q = q_values[self._actions.index(best_action)]
         else:
-            # get all the Q(s,a) for this state
-            # model.predict(X) where X is a n x p array of n obs, each ob having p features
-            # model.predict(X) gives a list of predictions; each prediction is a list of size k
+            # get all the Q(s,a) for this state            
             q_values = self._model.predict(state)[0]
-            max_q = max(q_values)
+            index = np.argmax(q_values)
+            max_q = q_values[index]
+            best_action = self._actions[index]
+        
+        if return_q:
+            return best_action, max_q
+        else:
+            return best_action
+    
+    def _replay(sample_size=100):
+        ''' Sample from memory to train internal model        
+        '''
+        sample_size = min(sample_size, len(self._memory))
+        batch = random.sample(self._memory, sample_size)
+        
+        for state, action, reward, next_state in batch:
+            # translate state from tuple to ndarray
+            state = np.array(state).reshape(1, len(state))
+            next_state = np.array(next_state).reshape(1, len(next_state))
+            # target value for this specific action
+            target_for_a = reward + self._discount_factor * np.amax(self._model.predict(next_state)[0])
+            # target value for all actions except this specific action
+            target_for_all_a = self._model.predict(state)
+            target_for_all_a[0][self._actions.index(action)] = target_for_a
+            self._model.fit(state, target_for_all_a, verbose=0)
+    
+    # Override base class abstractmethod
+    def learn(self, reward, new_state):
+        # if this agent has never taken any action before
+        if not self._last_action or not self._last_state:
+            action = self._find_action_greedily(new_state)
+            self._last_action = action          
+            self._last_state = new_state
+            return action
+        else:
+            # get the Q model to learn 
+            self._memory.append((self._last_state, self._last_action, reward, new_state))
+            self._replay()
+            # update values for next iteration
+            action = self._find_action_greedily(new_state)
+            self._last_action = action          
+            self._last_state = new_state
+            return action
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
+            
             
