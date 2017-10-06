@@ -49,7 +49,7 @@ class StockExchange(object):
         transaction_cost = 0        
         amount_paid = 0
         # the first bid or offer is 1 tick from stock.get_price() which is assumed to be a mid price
-        price_to_execute = self.stock.get_price() + self.tick
+        price_to_execute = self.stock.get_price() + self.tick * buy_or_sell
         
         while shares_left > 0:
             shares_to_execute = min(self.lot, shares_left)        
