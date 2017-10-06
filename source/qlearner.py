@@ -172,7 +172,11 @@ class DQNLearner(QLearner):
             return best_action
     
     def _replay(sample_size=100):
-        ''' Sample from memory to train internal model        
+        ''' Sample from memory, a collection of (s,a,r,s'), to train internal model
+        Args:
+            sample_size (int): how many samples to draw from memory
+        Returns:
+            None: only train the model internally
         '''
         sample_size = min(sample_size, len(self._memory))
         batch = random.sample(self._memory, sample_size)
