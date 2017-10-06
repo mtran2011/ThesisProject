@@ -23,9 +23,9 @@ def run_qmatrix_stock_trading():
     environment = StockTradingEnvironment(stock, learner, exchange)
     
     # for initial training and burn in
-    environment.run(util=1e-3, nrun=int(1e6))    
+    environment.run(1e-3, int(1e6))    
     # for graphing pnl after training, run again the above 5k times
-    wealths = environment.run(util=1e-3, nrun=5000, report=True)
+    wealths = environment.run(1e-3, 5000, report=True)
     graph_performance(wealths, 'qmatrix_performance')
    
 if __name__ == '__main__':

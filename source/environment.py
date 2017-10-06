@@ -15,7 +15,7 @@ class StockTradingEnvironment(object):
         self.learner = learner
         self.exchange = exchange
         
-    def run(util, nrun, report=False):
+    def run(self, util, nrun, report=False):
         ''' Run a stock trading agent for nrun iterations
         Args:        
             util (float): the constant in the utility function
@@ -31,7 +31,7 @@ class StockTradingEnvironment(object):
         wealths = []
         
         while iter_count < nrun:
-            order = learner.learn(reward, state)        
+            order = self.learner.learn(reward, state)        
             # when the exchange execute, it makes an impact on stock price
             transaction_cost = self.exchange.execute(order)        
             new_price, pnl = self.exchange.simulate_stock_price()
