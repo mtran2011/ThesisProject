@@ -68,7 +68,7 @@ class QMatrix(QLearner):
     def _get_q(self, state, action):
         ''' Return existing Q(s,a) for a given state s and action a
         Args:
-            state (object): state s
+            state (tuple): state s, a tuple of state attributes
             action (object): action a
         Returns:
             float: the value of Q(s,a). Zero if the Q value for tuple (s,a) has never been assigned
@@ -97,10 +97,10 @@ class QMatrix(QLearner):
         From the state, agent takes action, then observing reward and new_state
         Thus use the reward and max over {a} of Q(new_state, a) to update Q(state, action)
         Args:
-            state (object): the state this agent saw
+            state (tuple): the state this agent saw
             action (object): the action taken by the agent
             reward (float): the reward seen after taking action
-            new_state (object): the new_state seen after taking action
+            new_state (tuple): the new_state seen after taking action
         Returns:
             float: the updated value of Q(state, action)
         '''

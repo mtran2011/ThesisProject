@@ -82,5 +82,3 @@ class StockExchange(object):
         old_price = self.stock.get_price()
         new_price = self.stock.simulate_price(dt)
         return new_price, self.num_shares_owned * (new_price - old_price)
-        
-        
