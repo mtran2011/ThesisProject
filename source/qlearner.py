@@ -129,17 +129,15 @@ class QMatrix(QLearner):
 class DQNLearner(QLearner):
     ''' Class for a Q-learner that uses a network to estimate Q(s,a) for all a
     Attributes:        
-        _epsilon (float): constant in epsilon-greedy policy
-        _learning_rate (float): the constant learning_rate
+        _epsilon (float): constant in epsilon-greedy policy        
         _discount_factor (float): the constant discount_factor of future rewards
         _memory (list): list of tuples (s,a,r,s') to store for experience replay
         _model (Sequential): a network using keras Sequential
     '''
     
-    def __init__(self, actions, model, epsilon=0.1, learning_rate=0.1, discount_factor=0.999):        
+    def __init__(self, actions, model, epsilon=0.1, discount_factor=0.999):        
         super().__init__(actions)
-        self._epsilon = epsilon
-        self._learning_rate = learning_rate
+        self._epsilon = epsilon        
         self._discount_factor = discount_factor
         self._memory = []
         self._model = model # todo
@@ -209,24 +207,3 @@ class DQNLearner(QLearner):
             self._last_action = action          
             self._last_state = new_state
             return action
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
-            
