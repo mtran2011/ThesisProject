@@ -2,7 +2,6 @@ import abc
 import random
 import math
 import numpy as np
-from keras.models import Sequential
 
 '''
 Based on github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
@@ -169,7 +168,7 @@ class DQNLearner(QLearner):
         else:
             return best_action
     
-    def _replay(sample_size=100):
+    def _replay(self, sample_size=100):
         ''' Sample from memory, a collection of (s,a,r,s'), to train internal model
         Args:
             sample_size (int): how many samples to draw from memory
