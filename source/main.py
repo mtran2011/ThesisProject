@@ -1,4 +1,3 @@
-import numpy as np
 import matplotlib.pyplot as plt
 from stock import *
 from exchange import *
@@ -24,7 +23,7 @@ def run_qmatrix_stock_trading():
     environment = StockTradingEnvironment(stock, learner, exchange)
     
     # for initial training and burn in
-    environment.run(1e-3, int(1e6))
+    environment.run(1e-3, int(1e4))
     # for graphing pnl after training, run again the above 5k times
     wealths = environment.run(1e-3, 5000, report=True)
     graph_performance(wealths, 'qmatrix_performance')
@@ -45,4 +44,5 @@ def run_dqn_stock_trading():
     graph_performance(wealths, 'simple_dqn_ff_performance')
     
 if __name__ == '__main__':
+    run_qmatrix_stock_trading()
     run_dqn_stock_trading()    
