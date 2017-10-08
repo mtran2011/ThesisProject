@@ -79,7 +79,9 @@ class QMatrix(QLearner):
         if use_epsilon and random.random() < self._epsilon:
             # with probability epsilon, choose from all actions with equal chance
             best_action = random.choice(self._actions)
-            max_q = self._get_q(state, best_action)
+            max_q = None
+            if return_q:
+                max_q = self._get_q(state, best_action)
         else:
             # choose a = arg max {action} of Q(state, action)
             q_values = [self._get_q(state, a) for a in self._actions]
