@@ -36,7 +36,7 @@ def run_heuristic_qmatrix_stock_trading():
     lot = 100
     actions = list(range(-3*lot, 4*lot, lot))
     exchange = StockExchange(stock, lot=lot, impact=0, max_holding=1000)
-    ntrain = int(1e7)
+    ntrain = int(1e6)
     ntest = 5000
     util = 1e-3
 
