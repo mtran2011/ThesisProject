@@ -224,6 +224,8 @@ class QMatrixHeuristic(QMatrix):
     def _get_q(self, state, action):
         if (state, action) in self._Q:
             return self._Q[(state, action)]
+        elif not self._Q:
+            return 0
         else:
             # guess the value of Q(state, action) via sampling and averaging
             sample_size = min(self.sample_size, len(self._Q))

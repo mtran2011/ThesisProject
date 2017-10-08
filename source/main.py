@@ -3,7 +3,7 @@ from stock import *
 from exchange import *
 from qlearner import *
 from environment import *
-import model_builder
+# import model_builder
 import distance_func
 
 def graph_performance(wealths_list, agent_names):
