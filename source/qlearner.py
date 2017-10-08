@@ -219,7 +219,7 @@ class QMatrixHeuristic(QMatrix):
     def __init__(self, actions, dist_func, epsilon=0.1, learning_rate=0.1, discount_factor=0.999):
         super().__init__(actions, epsilon, learning_rate, discount_factor)        
         self._dist_func = dist_func
-        self.sample_size = 100
+        self.sample_size = 1000
     
     def _get_q(self, state, action):
         if (state, action) in self._Q:
