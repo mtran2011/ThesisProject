@@ -36,19 +36,22 @@ def run_heuristic_qmatrix_stock_trading():
     lot = 100
     actions = list(range(-3*lot, 4*lot, lot))
     exchange = StockExchange(stock, lot=lot, impact=0, max_holding=1000)
+    ntrain = int(1e6)
+    ntest = 5000
+    util = 1e-3
 
     # for simple QMatrix    
     learner = QMatrix(actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
     environment = StockTradingEnvironment(stock, learner, exchange)
-    environment.run(1e-3, int(1e4))    
-    wealths_qmatrix = environment.run(1e-3, 5000, report=True)
+    environment.run(util, ntrain)
+    wealths_qmatrix = environment.run(util, ntest, report=True)
     
     # for QMatrixHeuristic
     dist_func = lambda x1, x2: distance_func.p_norm(x1, x2, p=2)
     learner = QMatrixHeuristic(actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
     environment = StockTradingEnvironment(stock, learner, exchange)
-    environment.run(1e-3, int(1e4))    
-    wealths_qheuristic = environment.run(1e-3, 5000, report=True)
+    environment.run(util, ntrain)
+    wealths_qheuristic = environment.run(util, ntest, report=True)
         
     graph_performance([wealths_qmatrix, wealths_qheuristic], ['simple Q matrix', 'heuristic Q matrix'])
 
