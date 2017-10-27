@@ -1,19 +1,17 @@
-from stock import *
-from exchange import *
-from qlearner import *
+from stock import Stock, OUStock
+from exchange import StockExchange
+from qlearner import QLearner, QMatrix, DQNLearner, QMatrixHeuristic
 
 class StockTradingEnvironment(object):
     ''' An environment that can run a stock trading agent
-    Attributes:
-        stock (Stock): the stock this agent is trading
+    Attributes:        
         learner (QLearner): the agent
         exchange (StockExchange): the exchange
     '''
     
-    def __init__(self, stock, learner, exchange):
-        self.stock = stock
+    def __init__(self, learner, exchange):
         self.learner = learner
-        self.exchange = exchange
+        self.exchange = exchange        
         
     def run(self, util, nrun, report=False):
         ''' Run a stock trading agent for nrun iterations
@@ -23,9 +21,9 @@ class StockTradingEnvironment(object):
             report (boolean): True to return a list of cumulative_wealth over time
         Returns:
             list: list of cumulative wealth
-        '''    
+        '''
         reward = 0
-        state = (self.stock.get_price(), 0)    
+        state = (self.exchange.stock.get_price(), 0)    
         iter_count = 0
         cumulative_wealth = 0
         wealths = []
@@ -45,8 +43,8 @@ class StockTradingEnvironment(object):
             
             if report:
                 wealths.append(cumulative_wealth)
-            if iter_count % 500000 == 0:
-                print('finished 500k run')
+            if iter_count % 5000 == 0:
+                print('finished {0} runs'.format(iter_count))
         
         if report:
             return wealths
