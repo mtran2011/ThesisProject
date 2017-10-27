@@ -212,13 +212,13 @@ class DQNLearner(QLearner):
 class QMatrixHeuristic(QMatrix):
     '''
     Attributes:        
-        _dist_func (function): to calculate distance between two points (s1, a1) and (s2, a2)
+        dist_func (function): to calculate distance between two points (s1, a1) and (s2, a2)
         sample_size (int): how many samples to take when heuristically averaging and estimating 
     '''
 
     def __init__(self, actions, dist_func, epsilon=0.1, learning_rate=0.1, discount_factor=0.999):
         super().__init__(actions, epsilon, learning_rate, discount_factor)        
-        self._dist_func = dist_func
+        self.dist_func = dist_func
         self.sample_size = 100
     
     def _get_q(self, state, action):
@@ -234,7 +234,7 @@ class QMatrixHeuristic(QMatrix):
             x1 = [*state, action] # coordinate of this point
             for that_state, that_action in batch:
                 x2 = [*that_state, that_action] # coordinate of that point
-                distance = self._dist_func(x1, x2)
+                distance = self.dist_func(x1, x2)
                 q_val = self._Q[(that_state, that_action)]
                 distances.append(distance)
                 q_vals.append(q_val)
