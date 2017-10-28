@@ -34,19 +34,45 @@ class QLearner(object):
             object: the action found by epsilon-greedy
             float: the value q(s,a) for state s found by epsilon-greedy
         '''
+        pass
     
     @abc.abstractmethod
+    def _train_internally(self, reward, new_state):
+        ''' Use reward and new_state to train the internal model.
+        The internal training can be:
+            for discrete Q matrix: update Q(_last_state, _last_action)
+            for DQN: add the experience (s,a,r,s') to memory and train the internal neural network
+            for SemiGradQLearner: via grad descent, update the parameters in the function estimator
+        Args:
+            reward (float): the reward seen after taking self._last_action
+            new_state (tuple): the new_state seen after taking self._last_action
+        Returns:
+            None: train internal model based on (self._last_state, self._last_action, reward, new_state)
+        '''
+        pass
+
     def learn(self, reward, new_state):
-        ''' Get a reward and see a new_state. Use this to update Q(_last_state, _last_action). 
-        Find the best_action based on new_state
+        ''' Get a reward and see a new_state. Use these to do some internal training. Then return a new action.        
         Update _last_state <- new_state
         Update _last_action <- best_action        
         Args:
             reward (float): the reward seen after the previous action
             new_state (tuple): the new_state seen after the previous action
         Returns:
-            best_action (object): take a new action 
+            best_action (object): take a new action based on new_state
         '''
+        # if this agent has never taken any action before
+        if not self._last_action or not self._last_state:
+            action = self._find_action_greedily(new_state)
+            self._last_action = action          
+            self._last_state = new_state
+            return action
+        else:            
+            self._train_internally(reward, new_state)
+            action = self._find_action_greedily(new_state)
+            self._last_action = action          
+            self._last_state = new_state
+            return action
         
 class QMatrix(QLearner):
     ''' Class for a Q-learner that holds the values of Q(s,a)
@@ -83,8 +109,8 @@ class QMatrix(QLearner):
             if return_q:
                 max_q = self._get_q(state, best_action)
         else:
-            # choose a = arg max {action} of Q(state, action)
-            q_values = [self._get_q(state, a) for a in self._actions]
+            # choose action = arg max {action} of Q(state, action)
+            q_values = [self._get_q(state, action) for action in self._actions]
             max_q = max(q_values)
             best_action = self._actions[q_values.index(max_q)]
         
@@ -113,20 +139,46 @@ class QMatrix(QLearner):
         return new_q    
     
     # Override base class abstractmethod
-    def learn(self, reward, new_state):
-        # if this agent has never taken any action before
-        if not self._last_action or not self._last_state:
-            action = self._find_action_greedily(new_state)
-            self._last_action = action          
-            self._last_state = new_state
-            return action
+    def _train_internally(self, reward, new_state):
+        self._update_q(self._last_state, self._last_action, reward, new_state)
+        return None
+
+class QMatrixHeuristic(QMatrix):
+    '''
+    Attributes:        
+        dist_func (function): to calculate distance between two points (s1, a1) and (s2, a2)
+        sample_size (int): how many samples to take when heuristically averaging and estimating Q(s,a)
+    '''
+
+    def __init__(self, actions, dist_func, epsilon=0.1, learning_rate=0.1, discount_factor=0.999):
+        super().__init__(actions, epsilon, learning_rate, discount_factor)        
+        self.dist_func = dist_func
+        self.sample_size = 100
+    
+    def _get_q(self, state, action):
+        if (state, action) in self._Q:
+            return self._Q[(state, action)]
+        elif not self._Q:
+            return 0
         else:
-            self._update_q(self._last_state, self._last_action, reward, new_state)
-            action = self._find_action_greedily(new_state)
-            self._last_action = action          
-            self._last_state = new_state
-            return action
+            # guess the value of Q(state, action) via sampling and averaging
+            sample_size = min(self.sample_size, len(self._Q))
+            batch = random.sample(self._Q.keys(), sample_size)
+            distances, q_vals = [], []
+            x1 = [*state, action] # coordinate of this point
+            for that_state, that_action in batch:
+                x2 = [*that_state, that_action] # coordinate of that point
+                distance = self.dist_func(x1, x2)
+                q_val = self._Q[(that_state, that_action)]
+                distances.append(distance)
+                q_vals.append(q_val)
             
+            distances = np.array(distances)
+            q_vals = np.array(q_vals)
+            estimate = distances.dot(q_vals) / distances.sum()
+            self._Q[(state, action)] = estimate
+            return estimate
+
 class DQNLearner(QLearner):
     ''' Class for a Q-learner that uses a network to estimate Q(s,a) for all a
     Attributes:        
@@ -190,57 +242,53 @@ class DQNLearner(QLearner):
             target_for_all_a = self._model.predict(state)
             target_for_all_a[0][self._actions.index(action)] = target_for_a
             self._model.fit(state, target_for_all_a, verbose=0)
+        return None
     
     # Override base class abstractmethod
-    def learn(self, reward, new_state):
-        # if this agent has never taken any action before
-        if not self._last_action or not self._last_state:
-            action = self._find_action_greedily(new_state)
-            self._last_action = action          
-            self._last_state = new_state
-            return action
-        else:
-            # get the Q model to learn 
-            self._memory.append((self._last_state, self._last_action, reward, new_state))
-            self._replay()
-            # update values for next iteration
-            action = self._find_action_greedily(new_state)
-            self._last_action = action          
-            self._last_state = new_state
-            return action
+    def _train_internally(self, reward, new_state):
+        # memorize this experience and then train the neural network
+        self._memory.append((self._last_state, self._last_action, reward, new_state))
+        self._replay()
+        return None
 
-class QMatrixHeuristic(QMatrix):
+class SemiGradQLearner(QLearner):
+    ''' Class for a Q-learner that uses a parametric function approximator to estimate Q(s,a) for all a
+    Attributes:
+        _epsilon (float): constant in epsilon-greedy policy        
+        _discount_factor (float): the constant discount_factor of future rewards        
+        _estimator (FunctionEstimator): a parametric function estimator
     '''
-    Attributes:        
-        dist_func (function): to calculate distance between two points (s1, a1) and (s2, a2)
-        sample_size (int): how many samples to take when heuristically averaging and estimating 
-    '''
-
-    def __init__(self, actions, dist_func, epsilon=0.1, learning_rate=0.1, discount_factor=0.999):
-        super().__init__(actions, epsilon, learning_rate, discount_factor)        
-        self.dist_func = dist_func
-        self.sample_size = 100
     
-    def _get_q(self, state, action):
-        if (state, action) in self._Q:
-            return self._Q[(state, action)]
-        elif not self._Q:
-            return 0
+    def __init__(self, actions, estimator, epsilon=0.1, discount_factor=0.999):        
+        super().__init__(actions)
+        self._epsilon = epsilon
+        self._discount_factor = discount_factor
+        self._estimator = estimator
+    
+    # Override base class abstractmethod
+    def _find_action_greedily(self, state, use_epsilon=True, return_q=False):        
+        if use_epsilon and random.random() < self._epsilon:
+            # with probability epsilon, choose from all actions with equal chance
+            best_action = random.choice(self._actions)
+            max_q = None
+            if return_q:
+                max_q = self._estimator.estimate_q(state, best_action)
         else:
-            # guess the value of Q(state, action) via sampling and averaging
-            sample_size = min(self.sample_size, len(self._Q))
-            batch = random.sample(self._Q.keys(), sample_size)
-            distances, q_vals = [], []
-            x1 = [*state, action] # coordinate of this point
-            for that_state, that_action in batch:
-                x2 = [*that_state, that_action] # coordinate of that point
-                distance = self.dist_func(x1, x2)
-                q_val = self._Q[(that_state, that_action)]
-                distances.append(distance)
-                q_vals.append(q_val)
-            
-            distances = np.array(distances)
-            q_vals = np.array(q_vals)
-            estimate = distances.dot(q_vals) / distances.sum()
-            self._Q[(state, action)] = estimate
-            return estimate
+            q_values = [self._estimator.estimate_q(state, action) for action in self._actions]
+            max_q = max(q_values)
+            best_action = self._actions[q_values.index(max_q)]
+        
+        if return_q:
+            return best_action, max_q
+        else:
+            return best_action
+    
+    # Override base class abstractmethod
+    def _train_internally(self, reward, new_state):
+        old_q = self._estimator.estimate_q(self._last_state, self._last_action)
+        _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)
+        # gradient with respect to the parameters
+        ndarray_grad = self._estimator.eval_gradient(self._last_state, self._last_action)        
+        new_params = self._estimator.get_params() + self._learning_rate * (reward + self._discount_factor * max_q - old_q) * ndarray_grad
+        self._estimator.set_params(new_params)
+        return None
