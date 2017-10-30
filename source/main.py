@@ -35,7 +35,7 @@ def make_exchange():
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_exchange()
-    util, ntrain, ntest = 1e-3, int(2e4), 5000
+    util, ntrain, ntest = 1e-3, int(1e7), 5000
     
     # for simple QMatrix
     qmatrix_learner = QMatrix(actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
