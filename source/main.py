@@ -16,7 +16,7 @@ def graph_performance(wealths_list, agent_names, ntrain):
     plt.legend(loc='best')
     plt.xlabel('iterations of testing runs')
     plt.ylabel('cumulative wealth')
-    plt.savefig('../figs/newfig.png')
+    plt.savefig('../figs/compare_1mil_train.png')
     pass
 
 def make_exchange():
@@ -28,7 +28,7 @@ def make_exchange():
 
 def run_heuristic_qmatrix_stock_trading():
     actions, exchange = make_exchange()
-    util, ntrain, ntest = 1e-3, int(1e7), 5000
+    util, ntrain, ntest = 1e-3, int(1e6), 5000
     
     # for simple QMatrix
     learner = QMatrix(actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
