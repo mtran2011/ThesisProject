@@ -32,7 +32,7 @@ def make_exchange():
     exchange = StockExchange(stock, lot=lot, impact=0, max_holding=1000)
     return actions, exchange
 
-def run_heuristic_qmatrix_stock_trading():
+def run_qmatrix_stock_trading():
     actions, exchange = make_exchange()
     util, ntrain, ntest = 1e-3, int(1e6), 5000
     
@@ -74,4 +74,4 @@ def run_dqn_stock_trading():
     return None
 
 if __name__ == '__main__':
-    run_heuristic_qmatrix_stock_trading()
+    run_qmatrix_stock_trading()
