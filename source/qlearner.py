@@ -83,7 +83,7 @@ class QMatrix(QLearner):
         _discount_factor (float): the constant discount_factor of future rewards        
     '''
     
-    def __init__(self, actions, epsilon=0.1, learning_rate=0.1, discount_factor=0.999):        
+    def __init__(self, actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999):        
         super().__init__(actions)
         self._Q = dict()
         self._epsilon = epsilon
@@ -150,7 +150,7 @@ class QMatrixHeuristic(QMatrix):
         sample_size (int): how many samples to take when heuristically averaging and estimating Q(s,a)
     '''
 
-    def __init__(self, actions, dist_func, epsilon=0.1, learning_rate=0.1, discount_factor=0.999):
+    def __init__(self, actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999):
         super().__init__(actions, epsilon, learning_rate, discount_factor)        
         self.dist_func = dist_func
         self.sample_size = 100
@@ -254,14 +254,16 @@ class DQNLearner(QLearner):
 class SemiGradQLearner(QLearner):
     ''' Class for a Q-learner that uses a parametric function approximator to estimate Q(s,a) for all a
     Attributes:
-        _epsilon (float): constant in epsilon-greedy policy        
+        _epsilon (float): constant in epsilon-greedy policy
+        _learning_rate (float): the constant learning_rate
         _discount_factor (float): the constant discount_factor of future rewards        
-        _estimator (FunctionEstimator): a parametric function estimator
+        _estimator (QFunctionEstimator): a parametric function estimator
     '''
     
-    def __init__(self, actions, estimator, epsilon=0.1, discount_factor=0.999):        
+    def __init__(self, actions, estimator, epsilon=0.1, learning_rate=0.5, discount_factor=0.999):
         super().__init__(actions)
         self._epsilon = epsilon
+        self._learning_rate = learning_rate
         self._discount_factor = discount_factor
         self._estimator = estimator
     
@@ -288,7 +290,7 @@ class SemiGradQLearner(QLearner):
         old_q = self._estimator.estimate_q(self._last_state, self._last_action)
         _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)
         # gradient with respect to the parameters
-        ndarray_grad = self._estimator.eval_gradient(self._last_state, self._last_action)        
-        new_params = self._estimator.get_params() + self._learning_rate * (reward + self._discount_factor * max_q - old_q) * ndarray_grad
+        grad = self._estimator.eval_gradient(self._last_state, self._last_action)        
+        new_params = self._estimator.get_params() + self._learning_rate * (reward + self._discount_factor * max_q - old_q) * grad
         self._estimator.set_params(new_params)
         return None
