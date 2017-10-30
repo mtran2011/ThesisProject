@@ -4,18 +4,19 @@ from stock import OUStock
 from exchange import StockExchange
 from qlearner import QMatrix, QMatrixHeuristic, SemiGradQLearner, DQNLearner
 from environment import StockTradingEnvironment
+from function_estimator import CubicEstimator
 import distance_func
 # import model_builder
 
 def graph_performance(wealths_list, agent_names, ntrain):
-    linestyles = ['-', '--', '-.', ':']
-    colors = ['b', 'g', 'r', 'c', 'm', 'y', 'k']
+    linestyles = itertools.cycle(['-', '--', '-.', ':'])
+    colors = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
     
     plt.figure()
     for wealths, agent in zip(wealths_list, agent_names):
         plt.plot(range(len(wealths)), wealths, label=agent, 
-                 linestyle=itertools.cycle(linestyles),
-                 color=itertools.cycle(colors))
+                 linestyle=next(linestyles),
+                 color=next(colors))
     
     ntest = len(wealths_list[0])
     plt.title('Performance with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
@@ -34,7 +35,7 @@ def make_exchange():
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_exchange()
-    util, ntrain, ntest = 1e-3, int(1e6), 5000
+    util, ntrain, ntest = 1e-3, int(2e4), 5000
     
     # for simple QMatrix
     qmatrix_learner = QMatrix(actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)

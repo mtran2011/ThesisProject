@@ -63,7 +63,7 @@ class CubicEstimator(QFunctionEstimator):
         Args:
             num_state_features (int): number of features in a state
         '''
-        self._params = np.zeros((4, num_state_features + 3))
+        self._params = np.ones((4, num_state_features + 3))
 
     # Override base class abstractmethod
     def get_params(self):

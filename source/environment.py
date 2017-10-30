@@ -43,8 +43,8 @@ class StockTradingEnvironment(object):
             
             if report:
                 wealths.append(cumulative_wealth)
-            if iter_count % 10000 == 0:
-                print('finished {0} runs'.format(iter_count))
+            if iter_count % 20000 == 0:
+                print('finished {:,} runs'.format(iter_count))
         
         if report:
             return wealths
