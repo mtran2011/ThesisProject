@@ -7,14 +7,13 @@ import numpy as np
 Based on github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
 '''
 
-class QLearner(object):
+class QLearner(metaclass=abc.ABCMeta):
     ''' Abstract base class for a reinforcement learning agent
     Attributes:
         _actions (list): the list of all possible actions it can take
         _last_action (object): the immediate previous action it took
         _last_state (tuple): to memorize the immediate previous state, for which it took _last_action
-    '''
-    __metaclass__ = abc.ABCMeta
+    '''    
     
     def __init__(self, actions):
         if not actions or not isinstance(actions, list):

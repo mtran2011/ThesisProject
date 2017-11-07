@@ -1,12 +1,11 @@
 import abc
 import numpy as np 
 
-class QFunctionEstimator(object):
+class QFunctionEstimator(metaclass=abc.ABCMeta):
     ''' Abstract base class for a parametric function estimator of q(s,a)
     Attributes:
         _params (ndarray): the parameters used in estimation
-    '''
-    __metaclass__ = abc.ABCMeta
+    '''    
     
     @abc.abstractmethod
     def get_params(self):

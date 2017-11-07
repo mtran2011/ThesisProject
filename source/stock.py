@@ -1,7 +1,7 @@
 import abc
 import random
 
-class Stock(object):
+class Stock(metaclass=abc.ABCMeta):
     ''' Abstract base class for a stock object
     Attributes:
         _price (float): the current spot price in USD, Must Be Rounded to 1 decimal point        
@@ -10,8 +10,6 @@ class Stock(object):
         tick (float): if the stock price changes, it must change in multiple of ticks
         band (int): the max and min price is initial price +/- (band * tick)
     '''
-    
-    __metaclass__ = abc.ABCMeta
     
     def __init__(self, price, tick=0.1, band=1000):
         if tick not in [0.01, 0.1, 1]: 
@@ -47,6 +45,7 @@ class Stock(object):
         Returns:
             float: the new updated price
         '''
+        pass
 
 class OUStock(Stock):
     ''' Stock with dS following an OU process

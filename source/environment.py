@@ -1,35 +1,38 @@
-from stock import Stock, OUStock
-from exchange import StockExchange
-from qlearner import QLearner, QMatrix, DQNLearner, QMatrixHeuristic
+import abc
 
-class StockTradingEnvironment(object):
-    ''' An environment that can run a stock trading agent
+class Environment(metaclass=abc.ABCMeta):
+    ''' An environment that can run an agent
     Attributes:        
         learner (QLearner): the agent
         exchange (StockExchange): the exchange
-    '''
-    
+    '''    
+
     def __init__(self, learner, exchange):
         self.learner = learner
-        self.exchange = exchange        
-        
+        self.exchange = exchange
+    
+    @abc.abstractmethod
     def run(self, util, nrun, report=False):
-        ''' Run a stock trading agent for nrun iterations
-        Args:        
+        ''' Run an agent for nrun iterations
+        Args:
             util (float): the constant in the utility function
             nrun (int): number of iterations
             report (boolean): True to return a list of cumulative_wealth over time
         Returns:
             list: list of cumulative wealth
         '''
+        pass
+
+class StockTradingEnvironment(Environment):
+        
+    def run(self, util, nrun, report=False):        
         reward = 0
-        state = (self.exchange.stock.get_price(), 0)    
-        iter_count = 0
-        cumulative_wealth = 0
+        state = (self.exchange.stock.get_price(), 0)
+        iter_count, cumulative_wealth = 0, 0         
         wealths = []
         
         while iter_count < nrun:
-            order = self.learner.learn(reward, state)        
+            order = self.learner.learn(reward, state)
             # when the exchange execute, it makes an impact on stock price
             transaction_cost = self.exchange.execute(order)        
             new_price, pnl = self.exchange.simulate_stock_price()
@@ -50,3 +53,12 @@ class StockTradingEnvironment(object):
             return wealths
         else:
             return None
+
+class OptionHedgingEnvironment(Environment):
+        
+    def run(self, util, nrun, report=False):
+        reward = 0
+        state = (self.exchange.stock.get_price(), self.exchange.option.tau, 0)
+        iter_count, cumulative_wealth = 0, 0         
+        wealths = []
+        pass
