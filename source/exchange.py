@@ -91,8 +91,10 @@ class StockOptionExchange(StockExchange):
         self.option = option 
     
     def execute(self, order):
-        old_option_price = self.option.price * self.max_holding
+        old_option_price = self.option.price
         transaction_cost = super().execute(order) # spread and impact cost only
         # reprice option after market impact
-        
-
+        self.option.find_price()
+        # if option price increased, it reduces your cost
+        transaction_cost -= (self.option.price - old_option_price) * self.max_holding
+        return transaction_cost
