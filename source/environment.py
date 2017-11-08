@@ -27,14 +27,14 @@ class StockTradingEnvironment(Environment):
         
     def run(self, util, nrun, report=False):        
         reward = 0
+        # state = (stock price, current share holding)
         state = (self.exchange.stock.get_price(), 0)
         iter_count, cumulative_wealth = 0, 0         
         wealths = []
         
         while iter_count < nrun:
             order = self.learner.learn(reward, state)
-            # when the exchange execute, it makes an impact on stock price
-            transaction_cost = self.exchange.execute(order)        
+            transaction_cost = self.exchange.execute(order)
             new_price, pnl = self.exchange.simulate_stock_price()
             
             delta_wealth = pnl - transaction_cost        
@@ -58,7 +58,11 @@ class OptionHedgingEnvironment(Environment):
         
     def run(self, util, nrun, report=False):
         reward = 0
-        state = (self.exchange.stock.get_price(), self.exchange.option.tau, 0)
-        iter_count, cumulative_wealth = 0, 0         
+        # state = (single stock price, price of option portfolio, current share holding)
+        state = (self.exchange.get_stock_price(), self.exchange.get_option_price(), 0)
+        iter_count, cumulative_wealth = 0, 0
         wealths = []
-        pass
+        while iter_count < nrun:
+            order = self.learner.learn(reward, state)
+            transaction_cost = self.exchange.execute(order)
+            new_price, stock_pnl = self.exchange.simulate_stock_price()

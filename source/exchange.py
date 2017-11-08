@@ -84,4 +84,15 @@ class StockExchange(object):
         return new_price, self.num_shares_owned * (new_price - old_price)
 
 class StockOptionExchange(StockExchange):
-    pass
+    ''' Assume that the number of options held on exchange is constant and equal to max_holding
+    '''
+    def __init__(self, option, lot=100, impact=0, max_holding=1000):
+        super().__init__(option.stock, lot, impact, max_holding)
+        self.option = option 
+    
+    def execute(self, order):
+        old_option_price = self.option.price * self.max_holding
+        transaction_cost = super().execute(order) # spread and impact cost only
+        # reprice option after market impact
+        
+
