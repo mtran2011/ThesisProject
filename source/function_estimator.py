@@ -6,16 +6,14 @@ class QFunctionEstimator(metaclass=abc.ABCMeta):
     Attributes:
         _params (ndarray): the parameters used in estimation
     '''    
-    
-    @abc.abstractmethod
+        
     def get_params(self):
         '''
         Returns:
             ndarray: return self._params
         '''
-        pass
-    
-    @abc.abstractmethod
+        return self._params
+        
     def set_params(self, params):
         '''
         Args:
@@ -23,7 +21,9 @@ class QFunctionEstimator(metaclass=abc.ABCMeta):
         Returns:
             None: set self._params internally
         '''
-        pass
+        if params.shape != self._params.shape:
+            raise ValueError('params ndarray shape is wrong')
+        self._params = params
     
     @abc.abstractmethod
     def estimate_q(self, state, action):
@@ -63,16 +63,6 @@ class CubicEstimator(QFunctionEstimator):
             num_state_features (int): number of features in a state
         '''
         self._params = np.ones((4, num_state_features + 3)) / 1e3
-
-    # Override base class abstractmethod
-    def get_params(self):
-        return self._params
-
-    # Override base class abstractmethod
-    def set_params(self, params):
-        if params.shape != self._params.shape:
-            raise ValueError('params ndarray shape is wrong')
-        self._params = params
     
     # Override base class abstractmethod
     def estimate_q(self, state, action):
@@ -102,3 +92,26 @@ class CubicEstimator(QFunctionEstimator):
             grad[row,n+1] = action**(3-row)
             grad[row,n+2] = (action*x)**(3-row)
         return grad
+
+class PairwiseLinearEstimator(QFunctionEstimator):
+    def __init__(self, num_state_features):
+        ''' n = num_state_features, and the params consist of:
+        n+1 params for action a and K state features S(1) to S(n)
+        n params for product of a and each S(i)
+        and so on
+        '''
+        # self._params is an upper triangular matrix
+        self._params = np.ones((num_state_features+1, num_state_features+1)) / 1e2
+        self._params = np.triu(self._params)
+        # todo: doesn't have the const coef in each linear func yet
+    
+    # Override base class abstractmethod
+    def estimate_q(self, state, action):
+        n = len(state)
+        if n != (self._params.shape[0]-1):
+            raise ValueError('the length of state input is wrong')
+        inputs = [action, *state]
+        input_matrix = np.zeros((num_state_features+1, num_state_features+1))
+        pass
+
+        

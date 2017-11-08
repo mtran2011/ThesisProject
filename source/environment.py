@@ -66,3 +66,4 @@ class OptionHedgingEnvironment(Environment):
             order = self.learner.learn(reward, state)
             transaction_cost = self.exchange.execute(order)
             new_price, stock_pnl = self.exchange.simulate_stock_price()
+        pass
