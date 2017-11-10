@@ -60,19 +60,14 @@ class QLearner(metaclass=abc.ABCMeta):
         Returns:
             best_action (object): take a new action based on new_state
         '''
-        # if this agent has never taken any action before
-        if not self._last_action or not self._last_state:
-            action = self._find_action_greedily(new_state)
-            self._last_action = action          
-            self._last_state = new_state
-            return action
-        else:            
-            self._train_internally(reward, new_state)
-            action = self._find_action_greedily(new_state)
-            self._last_action = action          
-            self._last_state = new_state
-            return action
-        
+        # if this agent has taken at least one any action before
+        if self._last_action and self._last_state:        
+            self._train_internally(reward, new_state)            
+        action = self._find_action_greedily(new_state)
+        self._last_action = action          
+        self._last_state = new_state
+        return action
+
 class QMatrix(QLearner):
     ''' Class for a Q-learner that holds the values of Q(s,a)
     Attributes:
@@ -139,8 +134,9 @@ class QMatrix(QLearner):
     
     # Override base class abstractmethod
     def _train_internally(self, reward, new_state):
-        self._update_q(self._last_state, self._last_action, reward, new_state)
-        return None
+        if not self._last_state or not self._last_action:
+            return None
+        self._update_q(self._last_state, self._last_action, reward, new_state)        
 
 class QMatrixHeuristic(QMatrix):
     '''
@@ -192,7 +188,7 @@ class DQNLearner(QLearner):
         self._epsilon = epsilon        
         self._discount_factor = discount_factor
         self._memory = []
-        self._model = model # todo
+        self._model = model # todo, should model be an input
         
     # Override base class abstractmethod
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):
@@ -245,10 +241,11 @@ class DQNLearner(QLearner):
     
     # Override base class abstractmethod
     def _train_internally(self, reward, new_state):
+        if not self._last_state or not self._last_action:
+            return None
         # memorize this experience and then train the neural network
         self._memory.append((self._last_state, self._last_action, reward, new_state))
-        self._replay()
-        return None
+        self._replay()        
 
 class SemiGradQLearner(QLearner):
     ''' Class for a Q-learner that uses a parametric function approximator to estimate Q(s,a) for all a
@@ -264,7 +261,7 @@ class SemiGradQLearner(QLearner):
         self._epsilon = epsilon
         self._learning_rate = learning_rate
         self._discount_factor = discount_factor
-        self._estimator = estimator
+        self._estimator = estimator # the function estimator
     
     # Override base class abstractmethod
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):        

@@ -10,7 +10,7 @@ class QFunctionEstimator(metaclass=abc.ABCMeta):
     def get_params(self):
         '''
         Returns:
-            ndarray: return self._params
+            ndarray: self._params
         '''
         return self._params
         
