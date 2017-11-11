@@ -288,5 +288,4 @@ class SemiGradQLearner(QLearner):
         # gradient with respect to the parameters
         grad = self._estimator.eval_gradient(self._last_state, self._last_action)        
         new_params = self._estimator.get_params() + self._learning_rate * (reward + self._discount_factor * max_q - old_q) * grad
-        self._estimator.set_params(new_params)
-        return None
+        self._estimator.set_params(new_params)        

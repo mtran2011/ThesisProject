@@ -27,7 +27,7 @@ class QFunctionEstimator(metaclass=abc.ABCMeta):
     
     @abc.abstractmethod
     def estimate_q(self, state, action):
-        '''
+        ''' Estimate q(s,a)
         Args:
             state (iterable): ndarray, list or tuple of state features
             action (float): a scalar value for the action
@@ -38,7 +38,7 @@ class QFunctionEstimator(metaclass=abc.ABCMeta):
     
     @abc.abstractmethod
     def eval_gradient(self, state, action):
-        '''
+        ''' Evaluate the gradient with respect to the params
         Args:
             state (iterable): ndarray, list or tuple of state features
             action (float): a scalar value for the action
@@ -96,22 +96,36 @@ class CubicEstimator(QFunctionEstimator):
 class PairwiseLinearEstimator(QFunctionEstimator):
     def __init__(self, num_state_features):
         ''' n = num_state_features, and the params consist of:
-        n+1 params for action a and K state features S(1) to S(n)
-        n params for product of a and each S(i)
-        and so on
+        the linear coefs:
+            n+1 params for action a and K state features S(1) to S(n)
+            n params for product of a and each S(i)
+            and so on
+        the constant coefs:
+            same shape appended along axis=1
         '''
-        # self._params is an upper triangular matrix
+        # the left part of self._params is an upper triangular matrix for linear coefs
         self._params = np.ones((num_state_features+1, num_state_features+1)) / 1e2
-        self._params = np.triu(self._params)
-        # todo: doesn't have the const coef in each linear func yet
+        self._params = np.triu(self._params, k=0)
+        # the left part of self._params is an upper triangular matrix for constant coefs
+        const = self._params * 1
+        self._params = np.concatenate((self._params, const), axis=1)
     
     # Override base class abstractmethod
     def estimate_q(self, state, action):
         n = len(state)
         if n != (self._params.shape[0]-1):
-            raise ValueError('the length of state input is wrong')
+            raise ValueError('the length of state input is inconsistent')
         inputs = [action, *state]
-        input_matrix = np.zeros((num_state_features+1, num_state_features+1))
-        pass
-
-        
+        # set up the input matrix of pairwise product, this is upper triangular
+        input_matrix = np.zeros((n+1, n+1))        
+        for i in range(n+1):
+            for j in range(i,n+1):
+                if i != j:
+                    input_matrix[i,j] = inputs[i] * inputs[j]
+                else:
+                    input_matrix[i,j] = inputs[i]
+        # now evaluate q first by the linear coef part
+        q = 0
+        for i in range(n+1):
+            q += np.dot(input_matrix[i,:], self._params[i,:n+1]) + self._params[i,n+1:]
+        return q
