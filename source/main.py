@@ -35,16 +35,13 @@ def make_exchange():
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_exchange()
-    util, ntrain, ntest = 1e-3, int(1e2), 5000
+    util, ntrain, ntest = 1e-3, int(1e4), 10
     
     # for SemiGradQLearner    
     qfunc_estimator = PairwiseLinearEstimator(num_state_features=2)
-    qgrad_learner = SemiGradQLearner(actions, qfunc_estimator, epsilon=0.1, learning_rate=0.1, discount_factor=0.999)
+    qgrad_learner = SemiGradQLearner(actions, qfunc_estimator, epsilon=0.1, learning_rate=1e-6, discount_factor=0.999)
     environment = StockTradingEnvironment(qgrad_learner, exchange)
-    environment.run(util, ntrain)
-    # todo
-    print('function estimator params:')
-    print(qfunc_estimator.get_params())
+    environment.run(util, ntrain)    
     wealths_semigrad = environment.run(util, ntest, report=True)
 
     # for simple QMatrix

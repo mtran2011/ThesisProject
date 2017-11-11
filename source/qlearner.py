@@ -284,7 +284,7 @@ class SemiGradQLearner(QLearner):
     # Override base class abstractmethod
     def _train_internally(self, reward, new_state):
         old_q = self._estimator.estimate_q(self._last_state, self._last_action)
-        _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)
+        _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)        
         # gradient with respect to the parameters
         grad = self._estimator.eval_gradient(self._last_state, self._last_action)        
         new_params = self._estimator.get_params() + self._learning_rate * (reward + self._discount_factor * max_q - old_q) * grad
