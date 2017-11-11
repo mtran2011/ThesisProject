@@ -110,11 +110,18 @@ class PairwiseLinearEstimator(QFunctionEstimator):
         const = self._params * 1
         self._params = np.concatenate((self._params, const), axis=1)
     
-    # Override base class abstractmethod
-    def estimate_q(self, state, action):
+    def _make_input_matrix(self, state, action):
+        ''' Turn the inputs (s,a) into an upper triangular matrix of pairwise product
+        Args:
+            state (iterable): ndarray, list or tuple of state features
+            action (float): a scalar value for the action
+        Returns:
+            ndarray: shape (n+1,n+1) where n is len(state)
+        '''
         n = len(state)
         if n != (self._params.shape[0]-1):
             raise ValueError('the length of state input is inconsistent')
+
         inputs = [action, *state]
         # set up the input matrix of pairwise product, this is upper triangular
         input_matrix = np.zeros((n+1, n+1))        
@@ -124,8 +131,18 @@ class PairwiseLinearEstimator(QFunctionEstimator):
                     input_matrix[i,j] = inputs[i] * inputs[j]
                 else:
                     input_matrix[i,j] = inputs[i]
-        # now evaluate q first by the linear coef part
+        return input_matrix
+
+    # Override base class abstractmethod
+    def estimate_q(self, state, action):
+        input_matrix = self._make_input_matrix(state, action)
         q = 0
         for i in range(n+1):
             q += np.dot(input_matrix[i,:], self._params[i,:n+1]) + self._params[i,n+1:]
         return q
+    
+    # Override base class abstractmethod
+    def eval_gradient(self, state, action):
+        input_matrix = self._make_input_matrix(state, action)
+        constant = np.triu(np.ones((len(state)+1, len(state)+1)))
+        return np.concatenate((input_matrix, constant), axis=1)
