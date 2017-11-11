@@ -104,7 +104,7 @@ class PairwiseLinearEstimator(QFunctionEstimator):
             same shape appended along axis=1
         '''
         # the left part of self._params is an upper triangular matrix for linear coefs
-        self._params = np.ones((num_state_features+1, num_state_features+1)) / 1e2
+        self._params = np.ones((num_state_features+1, num_state_features+1)) / 100.0
         self._params = np.triu(self._params, k=0)
         # the left part of self._params is an upper triangular matrix for constant coefs
         const = self._params * 1
@@ -136,13 +136,17 @@ class PairwiseLinearEstimator(QFunctionEstimator):
     # Override base class abstractmethod
     def estimate_q(self, state, action):
         input_matrix = self._make_input_matrix(state, action)
+        n = len(state)        
         q = 0
-        for i in range(n+1):
-            q += np.dot(input_matrix[i,:], self._params[i,:n+1]) + self._params[i,n+1:]
+        for i in range(n+1):            
+            q += np.dot(input_matrix[i,:], self._params[i,:n+1]) + np.sum(self._params[i,n+1:])
         return q
     
     # Override base class abstractmethod
     def eval_gradient(self, state, action):
         input_matrix = self._make_input_matrix(state, action)
-        constant = np.triu(np.ones((len(state)+1, len(state)+1)))
-        return np.concatenate((input_matrix, constant), axis=1)
+        n = len(state)
+        constant = np.triu(np.ones((n+1, n+1)))
+        grad = np.concatenate((input_matrix, constant), axis=1)
+        assert not np.isnan(grad).any()
+        return grad

@@ -4,7 +4,7 @@ from stock import OUStock
 from exchange import StockExchange
 from qlearner import QMatrix, QMatrixHeuristic, SemiGradQLearner, DQNLearner
 from environment import StockTradingEnvironment
-from function_estimator import CubicEstimator
+from function_estimator import CubicEstimator, PairwiseLinearEstimator
 import distance_func
 # import model_builder
 
@@ -27,16 +27,26 @@ def graph_performance(wealths_list, agent_names, ntrain):
     return None
 
 def make_exchange():
-    stock = OUStock(price=110, kappa=0.1, mu=125, sigma=0.2, tick=0.1, band=1000)
-    lot = 100
+    stock = OUStock(price=10, kappa=0.1, mu=12, sigma=0.2, tick=0.1, band=100)
+    lot = 10
     actions = list(range(-3*lot, 4*lot, lot))    
-    exchange = StockExchange(stock, lot=lot, impact=0, max_holding=1000)
+    exchange = StockExchange(stock, lot=lot, impact=0, max_holding=100)
     return actions, exchange
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_exchange()
-    util, ntrain, ntest = 1e-3, int(1e5), 5000
+    util, ntrain, ntest = 1e-3, int(1e2), 5000
     
+    # for SemiGradQLearner    
+    qfunc_estimator = PairwiseLinearEstimator(num_state_features=2)
+    qgrad_learner = SemiGradQLearner(actions, qfunc_estimator, epsilon=0.1, learning_rate=0.1, discount_factor=0.999)
+    environment = StockTradingEnvironment(qgrad_learner, exchange)
+    environment.run(util, ntrain)
+    # todo
+    print('function estimator params:')
+    print(qfunc_estimator.get_params())
+    wealths_semigrad = environment.run(util, ntest, report=True)
+
     # for simple QMatrix
     qmatrix_learner = QMatrix(actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
     environment = StockTradingEnvironment(qmatrix_learner, exchange)
@@ -50,17 +60,8 @@ def run_qmatrix_stock_trading():
     environment.run(util, ntrain)
     wealths_qheuristic = environment.run(util, ntest, report=True)
 
-    # for SemiGradQLearner
-    '''
-    qfunc_estimator = CubicEstimator(num_state_features=2)
-    qgrad_learner = SemiGradQLearner(actions, qfunc_estimator, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
-    environment = StockTradingEnvironment(qgrad_learner, exchange)
-    environment.run(util, ntrain)
-    wealths_semigrad = environment.run(util, ntest, report=True)
-    '''
-
-    graph_performance([wealths_qmatrix, wealths_qheuristic],
-                      ['discrete Q matrix', 'heuristic Q matrix',], ntrain)
+    graph_performance([wealths_qmatrix, wealths_qheuristic, wealths_semigrad],
+                      ['discrete Q matrix', 'heuristic Q matrix', 'linear semigrad Q learner'], ntrain)
     return None
 
 def run_dqn_stock_trading():
