@@ -1,5 +1,6 @@
 import abc
-import numpy as np 
+import numpy as np
+from math import log
 
 class QFunctionEstimator(metaclass=abc.ABCMeta):
     ''' Abstract base class for a parametric function estimator of q(s,a)
@@ -122,7 +123,9 @@ class PairwiseLinearEstimator(QFunctionEstimator):
         if n != (self._params.shape[0]-1):
             raise ValueError('the length of state input is inconsistent')
 
+        # try using log to avoid NaN
         inputs = [action, *state]
+        inputs = [log(1+x) if x > 0 else -log(1-x) for x in inputs]
         # set up the input matrix of pairwise product, this is upper triangular
         input_matrix = np.zeros((n+1, n+1))        
         for i in range(n+1):
@@ -147,6 +150,5 @@ class PairwiseLinearEstimator(QFunctionEstimator):
         input_matrix = self._make_input_matrix(state, action)
         n = len(state)
         constant = np.triu(np.ones((n+1, n+1)))
-        grad = np.concatenate((input_matrix, constant), axis=1)
-        assert not np.isnan(grad).any()
+        grad = np.concatenate((input_matrix, constant), axis=1)        
         return grad
