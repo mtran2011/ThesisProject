@@ -24,17 +24,35 @@ def graph_performance(wealths_list, agent_names, ntrain):
     plt.xlabel('iterations of testing runs')
     plt.ylabel('cumulative wealth')
     plt.savefig('../figs/newfig.png')
-    return None
 
-def make_exchange():
-    stock = OUStock(price=10, kappa=0.1, mu=12, sigma=0.2, tick=0.1, band=100)
+def make_stock_exchange():
+    stock = OUStock(price=10, kappa=0.1, mu=12, sigma=0.2, tick=0.1, band=1000)
     lot = 10
-    actions = list(range(-3*lot, 4*lot, lot))    
+    actions = list(range(-3*lot, 4*lot, lot))
     exchange = StockExchange(stock, lot=lot, impact=0, max_holding=100)
     return actions, exchange
 
+def make_option_exchange():
+    stock = GBMStock(price=10, mu=0.005, sigma=0.01, tick=0.1, band=1000)
+    option = EuropeanStockOption(stock, k=10, tau=252, r=0.001, is_call=True)
+    lot = 10
+    actions = list(range(-5*lot, 5*lot, lot))
+    exchange = StockOptionExchange(option, lot=lot, impact=0, max_holding=5*lot)
+    return actions, exchange
+
+def run_qmatrix_option_hedging():
+    actions, exchange = make_option_exchange()
+    util, ntrain, ntest = 1e-3, int(1e6), 5000
+
+    # for QMatrixHeuristic
+    dist_func = lambda x1, x2: distance_func.p_norm(x1, x2, p=2)
+    qavg_learner = QMatrixHeuristic(actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
+    environment = OptionHedgingEnvironment(qavg_learner, exchange)
+    environment.run(util, ntrain)
+    wealths_qheuristic = environment.run(util, ntest, report=True)
+
 def run_qmatrix_stock_trading():
-    actions, exchange = make_exchange()
+    actions, exchange = make_stock_exchange()
     util, ntrain, ntest = 1e-3, int(1e6), 5000
     
     # for SemiGradQLearner    
@@ -59,11 +77,10 @@ def run_qmatrix_stock_trading():
     wealths_qheuristic = environment.run(util, ntest, report=True)
 
     graph_performance([wealths_qmatrix, wealths_qheuristic, wealths_semigrad],
-                      ['discrete Q matrix', 'heuristic Q matrix', 'linear semigrad Q learner'], ntrain)
-    return None
+                      ['discrete Q matrix', 'heuristic Q matrix', 'semigrad Q learner'], ntrain)    
 
 def run_dqn_stock_trading():
-    actions, exchange = make_exchange()
+    actions, exchange = make_stock_exchange()
     util, ntrain, ntest = 1e-3, int(1e6), 5000
 
     model = model_builder.build_simple_ff(len(actions), 2, len(actions))
@@ -72,8 +89,7 @@ def run_dqn_stock_trading():
 
     environment.run(util, ntrain)    
     wealths = environment.run(util, ntest, report=True)
-    graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
-    return None
+    graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)    
 
 if __name__ == '__main__':
     run_qmatrix_stock_trading()
