@@ -24,6 +24,9 @@ class StockExchange(object):
         self.max_holding = max_holding
         self.num_shares_owned = 0
     
+    def get_stock_price(self):
+        return self.stock.get_price()
+
     def execute(self, order):
         ''' Execute the order, set the stock price based on self.impact, then calculate transaction cost        
         Args:

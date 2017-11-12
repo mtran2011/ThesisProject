@@ -28,21 +28,21 @@ class StockTradingEnvironment(Environment):
     def run(self, util, nrun, report=False):        
         reward = 0
         # state = (stock price, current share holding)
-        state = (self.exchange.stock.get_price(), 0)
+        state = (self.exchange.get_stock_price(), 0)
         iter_count, cumulative_wealth = 0, 0         
         wealths = []
         
         while iter_count < nrun:
             order = self.learner.learn(reward, state)
             transaction_cost = self.exchange.execute(order)
-            new_price, pnl = self.exchange.simulate_stock_price()
+            new_stock_price, pnl = self.exchange.simulate_stock_price()
             
             delta_wealth = pnl - transaction_cost        
             cumulative_wealth += delta_wealth
             iter_count += 1
             
             reward = delta_wealth - util / 2 * (delta_wealth - cumulative_wealth / iter_count)**2
-            state = (new_price, self.exchange.num_shares_owned)
+            state = (new_stock_price, self.exchange.num_shares_owned)
             
             if report:
                 wealths.append(cumulative_wealth)
@@ -64,6 +64,8 @@ class OptionHedgingEnvironment(Environment):
         wealths = []
         while iter_count < nrun:
             order = self.learner.learn(reward, state)
+            # transaction_cost includes spread, impact, and change in option value
             transaction_cost = self.exchange.execute(order)
-            new_price, stock_pnl = self.exchange.simulate_stock_price()
+            # the exchange simulates the stock and calculate pnl from both stock and option
+            new_stock_price, pnl = self.exchange.simulate_stock_price()
         pass
