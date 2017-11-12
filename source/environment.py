@@ -68,4 +68,20 @@ class OptionHedgingEnvironment(Environment):
             transaction_cost = self.exchange.execute(order)
             # the exchange simulates the stock and calculate pnl from both stock and option
             new_stock_price, pnl = self.exchange.simulate_stock_price()
-        pass
+
+            delta_wealth = pnl - transaction_cost        
+            cumulative_wealth += delta_wealth
+            iter_count += 1
+            
+            reward = delta_wealth - util / 2 * (delta_wealth - cumulative_wealth / iter_count)**2
+            state = (new_stock_price, self.exchange.get_option_price(), self.exchange.num_shares_owned)
+
+            if report:
+                wealths.append(cumulative_wealth)
+            if iter_count % 20000 == 0:
+                print('finished {:,} runs'.format(iter_count))
+        
+        if report:
+            return wealths
+        else:
+            return None
