@@ -1,5 +1,6 @@
 import abc
 import random
+from math import exp
 
 class Stock(metaclass=abc.ABCMeta):
     ''' Abstract base class for a stock object
@@ -67,4 +68,24 @@ class OUStock(Stock):
         dW = dt**0.5 * random.gauss(0.0, 1.0)
         new_price = self._price + self.kappa * (self.mu - self._price) * dt + self.sigma * dW
         self.set_price(new_price)        
-        return self._price    
+        return self._price
+
+class GBMStock(Stock):
+    ''' Geometric Brownian motion stock
+    dlogS = (mu - 0.5 * sigma**2) * dt + sigma * dW
+    Attributes:
+        mu (float): the drift 
+        sigma (float): volatility
+    '''
+    def __init__(self, price, mu, sigma, tick=0.1, band=1000):
+        super().__init__(price, tick, band)        
+        self.mu = mu
+        self.sigma = sigma
+    
+    # Override base class abstractmethod
+    def simulate_price(self, dt=1.0):
+        dW = dt**0.5 * random.gauss(0.0, 1.0)
+        dlogS = (self.mu - 0.5 * self.sigma**2) * dt + self.sigma * dW
+        new_price = self._price * exp(dlogS)
+        self.set_price(new_price)        
+        return self._price
