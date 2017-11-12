@@ -1,10 +1,11 @@
 import itertools
 import matplotlib.pyplot as plt
-from stock import OUStock
-from exchange import StockExchange
+from stock import OUStock, GBMStock
+from exchange import StockExchange, StockOptionExchange
 from qlearner import QMatrix, QMatrixHeuristic, SemiGradQLearner, DQNLearner
-from environment import StockTradingEnvironment
-from function_estimator import CubicEstimator, PairwiseLinearEstimator
+from environment import StockTradingEnvironment, OptionHedgingEnvironment
+from function_estimator import PairwiseLinearEstimator
+from option import EuropeanStockOption
 import distance_func
 # import model_builder
 
@@ -46,10 +47,12 @@ def run_qmatrix_option_hedging():
 
     # for QMatrixHeuristic
     dist_func = lambda x1, x2: distance_func.p_norm(x1, x2, p=2)
-    qavg_learner = QMatrixHeuristic(actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
-    environment = OptionHedgingEnvironment(qavg_learner, exchange)
+    qheuristic_learner = QMatrixHeuristic(actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
+    environment = OptionHedgingEnvironment(qheuristic_learner, exchange)
     environment.run(util, ntrain)
-    wealths_qheuristic = environment.run(util, ntest, report=True)
+    wealths_qheuristic, deltas, share_holdings = environment.run(util, ntest, report=True)
+
+    graph_performance([deltas, share_holdings], ['option delta', 'scaled share holding'], ntrain)
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
@@ -71,8 +74,8 @@ def run_qmatrix_stock_trading():
 
     # for QMatrixHeuristic
     dist_func = lambda x1, x2: distance_func.p_norm(x1, x2, p=2)
-    qavg_learner = QMatrixHeuristic(actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
-    environment = StockTradingEnvironment(qavg_learner, exchange)
+    qheuristic_learner = QMatrixHeuristic(actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
+    environment = StockTradingEnvironment(qheuristic_learner, exchange)
     environment.run(util, ntrain)
     wealths_qheuristic = environment.run(util, ntest, report=True)
 
@@ -92,4 +95,4 @@ def run_dqn_stock_trading():
     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)    
 
 if __name__ == '__main__':
-    run_qmatrix_stock_trading()
+    run_qmatrix_option_hedging()

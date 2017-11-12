@@ -28,12 +28,14 @@ class EuropeanStockOption(object):
             self.price = max(s-self.k, 0) if self.is_call else max(-s+self.k, 0)
         
         sig = self.stock.sigma
-        d1 = (log(s / self.k) + (r + 0.5 * sig**2) * self.tau) / (sig * self.tau**0.5)
-        d2 = d1 - sig * self.tau**0.5
+        r, k, tau = self.r, self.k, self.tau
+
+        d1 = (log(s / k) + (r + 0.5 * sig**2) * tau) / (sig * tau**0.5)
+        d2 = d1 - sig * tau**0.5
         if self.is_call:
-            self.price = s * norm.cdf(d1) - k * exp(-self.r*self.tau) * norm.cdf(d2)
+            self.price = s * norm.cdf(d1) - k * exp(-r*tau) * norm.cdf(d2)
         else:
-            self.price = -s * norm.cdf(-d1) + k * exp(-self.r*self.tau) * norm.cdf(-d2)
+            self.price = -s * norm.cdf(-d1) + k * exp(-r*tau) * norm.cdf(-d2)
         return self.price
 
     def find_delta(self):
@@ -43,5 +45,6 @@ class EuropeanStockOption(object):
             return 1
         s = self.stock.get_price()
         sig = self.stock.sigma
-        d1 = (log(s / self.k) + (r + 0.5 * sig**2) * self.tau) / (sig * self.tau**0.5)
+        r, k, tau = self.r, self.k, self.tau
+        d1 = (log(s / k) + (r + 0.5 * sig**2) * tau) / (sig * tau**0.5)
         return norm.cdf(d1)

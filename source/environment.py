@@ -61,7 +61,7 @@ class OptionHedgingEnvironment(Environment):
         # state = (single stock price, price of option portfolio, current share holding)
         state = (self.exchange.get_stock_price(), self.exchange.get_option_price(), 0)
         iter_count, cumulative_wealth = 0, 0
-        wealths = []
+        wealths, deltas, share_holdings = [], [], []
         while iter_count < nrun:
             order = self.learner.learn(reward, state)
             # transaction_cost includes spread, impact, and change in option value
@@ -78,10 +78,13 @@ class OptionHedgingEnvironment(Environment):
 
             if report:
                 wealths.append(cumulative_wealth)
+                # the holding in option is constant at max_holding so have to scale share_holdings
+                deltas.append(self.exchange.option.find_delta())
+                share_holdings.append(self.exchange.num_shares_owned / self.exchange.max_holding)
             if iter_count % 20000 == 0:
                 print('finished {:,} runs'.format(iter_count))
         
         if report:
-            return wealths
+            return wealths, deltas, share_holdings
         else:
             return None
