@@ -110,8 +110,9 @@ class StockOptionExchange(StockExchange):
     def simulate_stock_price(self, dt=1.0):
         old_option_price = self.option.price
         # pnl from movement of the stock only
-        new_stock_price, pnl = super().simulate_stock_price()
+        new_stock_price, pnl = super().simulate_stock_price()        
         # reprice the option
+        self.option.tau -= dt # because time has moved by dt step
         new_option_price = self.option.find_price()
         pnl += (new_option_price - old_option_price) * self.max_holding
         return new_stock_price, pnl

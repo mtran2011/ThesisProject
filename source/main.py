@@ -34,7 +34,7 @@ def make_stock_exchange():
 
 def make_option_exchange():
     stock = GBMStock(price=10, mu=0.005, sigma=0.01, tick=0.1, band=1000)
-    option = EuropeanStockOption(stock, k=10, tau=252, r=0.001, is_call=True)
+    option = EuropeanStockOption(stock, k=10, tau=(1e6+5010), r=0.001, is_call=True)
     lot = 10
     actions = list(range(-5*lot, 5*lot, lot))
     exchange = StockOptionExchange(option, lot=lot, impact=0, max_holding=5*lot)
