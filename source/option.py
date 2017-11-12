@@ -35,3 +35,13 @@ class EuropeanStockOption(object):
         else:
             self.price = -s * norm.cdf(-d1) + k * exp(-self.r*self.tau) * norm.cdf(-d2)
         return self.price
+
+    def find_delta(self):
+        if self.tau < 0:
+            return 0
+        if self.tau == 0:
+            return 1
+        s = self.stock.get_price()
+        sig = self.stock.sigma
+        d1 = (log(s / self.k) + (r + 0.5 * sig**2) * self.tau) / (sig * self.tau**0.5)
+        return norm.cdf(d1)

@@ -80,24 +80,38 @@ class StockExchange(object):
             float: the new share price
             float: one step pnl based on num_shares_owned and change in stock price
         '''
-        
-        # call stock.simulate_price(dt) 
         old_price = self.stock.get_price()
         new_price = self.stock.simulate_price(dt)
         return new_price, self.num_shares_owned * (new_price - old_price)
 
 class StockOptionExchange(StockExchange):
     ''' Assume that the number of options held on exchange is constant and equal to max_holding
+    Attributes:
+        option (EuropeanStockOption): 
     '''
-    def __init__(self, option, lot=100, impact=0, max_holding=1000):
+    def __init__(self, option, lot=100, impact=0, max_holding=100):
         super().__init__(option.stock, lot, impact, max_holding)
         self.option = option 
     
+    def get_option_price(self):
+        return self.option.price
+    
     def execute(self, order):
         old_option_price = self.option.price
-        transaction_cost = super().execute(order) # spread and impact cost only
-        # reprice option after market impact
-        self.option.find_price()
+        # first calculate the spread and impact cost only
+        transaction_cost = super().execute(order)
+        # reprice option after market impact has moved underlying stock
+        new_option_price = self.option.find_price()
+        # the number of option held is constant and equal to max_holding
         # if option price increased, it reduces your cost
-        transaction_cost -= (self.option.price - old_option_price) * self.max_holding
+        transaction_cost -= (new_option_price - old_option_price) * self.max_holding
         return transaction_cost
+    
+    def simulate_stock_price(self, dt=1.0):
+        old_option_price = self.option.price
+        # pnl from movement of the stock only
+        new_stock_price, pnl = super().simulate_stock_price()
+        # reprice the option
+        new_option_price = self.option.find_price()
+        pnl += (new_option_price - old_option_price) * self.max_holding
+        return new_stock_price, pnl

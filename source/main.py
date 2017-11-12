@@ -53,11 +53,11 @@ def run_qmatrix_option_hedging():
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
-    util, ntrain, ntest = 1e-3, int(1e6), 5000
+    util, ntrain, ntest = 1e-3, int(1e4), 5000
     
     # for SemiGradQLearner    
     qfunc_estimator = PairwiseLinearEstimator(num_state_features=2)
-    qgrad_learner = SemiGradQLearner(actions, qfunc_estimator, epsilon=0.1, learning_rate=1e-6, discount_factor=0.999)
+    qgrad_learner = SemiGradQLearner(actions, qfunc_estimator, epsilon=0.1, learning_rate=1e-5, discount_factor=0.999)
     environment = StockTradingEnvironment(qgrad_learner, exchange)
     environment.run(util, ntrain)    
     wealths_semigrad = environment.run(util, ntest, report=True)
