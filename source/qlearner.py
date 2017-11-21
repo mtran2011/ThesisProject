@@ -163,7 +163,7 @@ class KernelSmoothingQMatrix(QMatrix):
         
         k_vals = np.array(k_vals)
         q_vals = np.array(q_vals)
-        estimate = k_vals.dot(q_vals) / k_vals.sum()
+        estimate = np.asscalar(k_vals.dot(q_vals) / k_vals.sum())
         self._Q[(state, action)] = estimate
         return estimate
 
@@ -249,7 +249,7 @@ class SemiGradQLearner(QLearner):
         _estimator (QFunctionEstimator): a parametric function estimator
     '''
     
-    def __init__(self, actions, estimator, epsilon=0.1, learning_rate=0.5, discount_factor=0.999):
+    def __init__(self, actions, estimator, epsilon, learning_rate, discount_factor):
         super().__init__(actions)
         self._epsilon = epsilon
         self._learning_rate = learning_rate
