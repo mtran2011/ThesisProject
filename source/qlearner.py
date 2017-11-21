@@ -20,7 +20,7 @@ class QLearner(abc.ABC):
             raise ValueError('actions cannot be empty and must be a list')                
         self._actions = actions
         self._last_action = None
-        self._last_state = None        
+        self._last_state = None
     
     @abc.abstractmethod
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):
@@ -61,12 +61,18 @@ class QLearner(abc.ABC):
             best_action (object): take a new action based on new_state
         '''
         # if this agent has taken at least one any action before
-        if self._last_action and self._last_state:
+        if self._last_action is not None and self._last_state is not None:
             self._train_internally(reward, new_state)
         action = self._find_action_greedily(new_state)
         self._last_action = action          
         self._last_state = new_state
         return action
+    
+    def reset_last_action(self):
+        ''' Reset to prepare to play a new episode
+        '''
+        self._last_action = None
+        self._last_state = None
 
 class QMatrix(QLearner):
     ''' Class for a Q-learner matrix that holds the values of Q(s,a)
@@ -117,7 +123,7 @@ class QMatrix(QLearner):
     # Override base class abstractmethod
     def _train_internally(self, reward, new_state):
         # cannot train if never seen a state or took an action before
-        if not self._last_state or not self._last_action:
+        if self._last_action is None or self._last_state is None:
             return None
         
         # use reward, new_state to update Q(self._last_state, self._last_action)
@@ -236,7 +242,7 @@ class DQNLearner(QLearner):
     
     # Override base class abstractmethod
     def _train_internally(self, reward, new_state):
-        if not self._last_state or not self._last_action:
+        if self._last_action is None or self._last_state is None:
             return None
         # memorize this experience and then train the neural network
         self._memory.append((self._last_state, self._last_action, reward, new_state))
@@ -278,6 +284,9 @@ class SemiGradQLearner(QLearner):
     
     # Override base class abstractmethod
     def _train_internally(self, reward, new_state):
+        if self._last_action is None or self._last_state is None:
+            return None
+
         old_q = self._estimator.estimate_q(self._last_state, self._last_action)
         _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)        
         # gradient with respect to the parameters
