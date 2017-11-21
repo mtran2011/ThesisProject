@@ -181,7 +181,7 @@ class DQNLearner(QLearner):
         self._epsilon = epsilon        
         self._discount_factor = discount_factor
         self._memory = []
-        self._model = model # todo, should model be an input
+        self._model = model # todo, should model be an input?
         
     # Override base class abstractmethod
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):
