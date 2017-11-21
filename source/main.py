@@ -6,7 +6,7 @@ from qlearner import TabularQMatrix, KernelSmoothingQMatrix
 from environment import StockTradingEnvironment, OptionHedgingEnvironment
 from function_estimator import PairwiseLinearEstimator
 from option import EuropeanStockOption
-import kernel_functions
+import kernel_function
 
 def graph_performance(wealths_list, agent_names, ntrain):
     linestyles = itertools.cycle(['-', '--', '-.', ':'])
@@ -45,7 +45,7 @@ def run_qmatrix_option_hedging():
     util, ntrain, ntest = 1e-3, int(1e6), 5000
 
     # for QMatrixHeuristic
-    kernel = lambda x1, x2: kernel_functions.inverse_norm_p(x1, x2, p=2)
+    kernel = lambda x1, x2: kernel_function.inverse_norm_p(x1, x2, p=2)
     smoothing_qlearner = QMatrixHeuristic(actions, kernel, epsilon=0.1, learning_rate=0.5, discount_factor=0.999)
     environment = OptionHedgingEnvironment(smoothing_qlearner, exchange)
     environment.run(util, ntrain)
@@ -75,7 +75,7 @@ def run_qmatrix_stock_trading():
     wealths_tabular_qmatrix = environment.run(util, ntest, report=True)
 
     # for KernelSmoothingQMatrix using inverse L2 distance
-    kernel = lambda x1, x2: kernel_functions.inverse_norm_p(x1, x2, p=2)
+    kernel = lambda x1, x2: kernel_function.inverse_norm_p(x1, x2, p=2)
     smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel, epsilon, learning_rate, discount_factor)
     environment = StockTradingEnvironment(smoothing_qlearner, exchange)
     environment.run(util, ntrain)
