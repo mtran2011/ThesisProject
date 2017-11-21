@@ -75,8 +75,8 @@ class OptionHedgingEnvironment(Environment):
             transaction_cost = self.exchange.execute(order)
             if report:
                 # compare current delta and the holdings the agent aims at
-                # the holding in option is constant at max_holding so have to scale delta with share_holdings
-                deltas.append(self.exchange.get_option_delta() * self.exchange.max_holding)
+                # the holding in option is constant at max_holding so remember to scale delta with share_holdings
+                deltas.append(self.exchange.get_option_delta())
                 share_holdings.append(self.exchange.num_shares_owned)
             
             # after order is executed and the agent had aimed for delta, now the stock moves

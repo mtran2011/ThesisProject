@@ -1,3 +1,6 @@
+''' Module for the Exchange class
+'''
+
 class StockExchange(object):
     ''' A class to execute buy or sell order for a single stock 
     For a lot size of 100 shares and tick of 0.1, an order to buy 120 shares will have the last 20 executed at price + 0.1
@@ -21,6 +24,8 @@ class StockExchange(object):
         self.num_shares_owned = 0
     
     def get_stock_price(self):
+        ''' Return stock price that is already rounded
+        '''
         return self._stock.get_price()
 
     def execute(self, order):
@@ -93,8 +98,16 @@ class StockOptionExchange(StockExchange):
         self._option = option
     
     def get_option_price(self):
-        return self._option.price
+        ''' Return option price that is already rounded
+        The option portfolio is constant at max_holding so have to scale to that
+        '''
+        return self._option.get_price() * self.max_holding
     
+    def get_option_delta(self):
+        ''' Return delta of the option portfolio scaled to max_holding
+        '''
+        return self._option.get_delta() * self.max_holding
+
     def execute(self, order):
         old_option_price = self._option.price
         # first calculate the spread and impact cost only
