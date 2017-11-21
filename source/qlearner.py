@@ -3,12 +3,10 @@ import random
 import math
 import numpy as np
 
-'''
-Based on github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
-'''
+# Adapted from: github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
 
-class QLearner(metaclass=abc.ABCMeta):
-    ''' Abstract base class for a reinforcement learning agent
+class QLearner(abc.ABC):
+    ''' Abstract base class for a Q-learning agent
     Attributes:
         _actions (list): the list of all possible actions it can take
         _last_action (object): the immediate previous action it took
@@ -31,7 +29,7 @@ class QLearner(metaclass=abc.ABCMeta):
             return_q (bool): True to return the found value of Q(state, a)
         Returns: 
             object: the action found by epsilon-greedy
-            float: the value q(s,a) for state s found by epsilon-greedy
+            float: the value Q(s,a) for state s found by epsilon-greedy
         '''
         pass
     
@@ -61,15 +59,15 @@ class QLearner(metaclass=abc.ABCMeta):
             best_action (object): take a new action based on new_state
         '''
         # if this agent has taken at least one any action before
-        if self._last_action and self._last_state:        
-            self._train_internally(reward, new_state)            
+        if self._last_action and self._last_state:
+            self._train_internally(reward, new_state)
         action = self._find_action_greedily(new_state)
         self._last_action = action          
         self._last_state = new_state
         return action
 
 class QMatrix(QLearner):
-    ''' Class for a Q-learner that holds the values of Q(s,a)
+    ''' Class for a Q-learner matrix that holds the values of Q(s,a)
     Attributes:
         _Q (dict): dict of key tuple (s,a) to float value Q(s,a)        
         _epsilon (float): constant in epsilon-greedy policy
@@ -77,22 +75,23 @@ class QMatrix(QLearner):
         _discount_factor (float): the constant discount_factor of future rewards        
     '''
     
-    def __init__(self, actions, epsilon=0.1, learning_rate=0.5, discount_factor=0.999):        
+    def __init__(self, actions, epsilon, learning_rate, discount_factor):
         super().__init__(actions)
         self._Q = dict()
         self._epsilon = epsilon
         self._learning_rate = learning_rate
         self._discount_factor = discount_factor
     
+    @abc.abstractmethod
     def _get_q(self, state, action):
-        ''' Return existing Q(s,a) for a given state s and action a
+        ''' Find, or estimate, Q(s,a) for a given state s and action a
         Args:
             state (tuple): state s, a tuple of state attributes
             action (object): action a
         Returns:
-            float: the value of Q(s,a). Zero if the Q value for tuple (s,a) has never been assigned
+            float: the value of Q(s,a). 
         '''
-        return self._Q.get((state, action), 0)
+        pass        
         
     # Override base class abstractmethod
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):        
@@ -111,68 +110,62 @@ class QMatrix(QLearner):
         if return_q:
             return best_action, max_q
         else:
-            return best_action
-    
-    def _update_q(self, state, action, reward, new_state):
-        ''' Update Q(state, action) after observing reward and new_state
-        From the state, agent takes action, then observing reward and new_state
-        Thus use the reward and max over {a} of Q(new_state, a) to update Q(state, action)
-        Args:
-            state (tuple): the state this agent saw
-            action (object): the action taken by the agent
-            reward (float): the reward seen after taking action
-            new_state (tuple): the new_state seen after taking action
-        Returns:
-            float: the updated value of Q(state, action)
-        '''
-        old_q = self._get_q(state, action)
-        # find the max over all {a} of Q(new_state, a)
-        _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)
-        new_q = old_q + self._learning_rate * (reward + self._discount_factor * max_q - old_q)
-        self._Q[(state, action)] = new_q
-        return new_q    
+            return best_action       
     
     # Override base class abstractmethod
     def _train_internally(self, reward, new_state):
+        # cannot train if never seen a state or took an action before
         if not self._last_state or not self._last_action:
             return None
-        self._update_q(self._last_state, self._last_action, reward, new_state)        
+        
+        # use reward, new_state to update Q(self._last_state, self._last_action)
+        old_q = self._get_q(self._last_state, self._last_action)
+        # find max over a of Q(s',a)
+        _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)
+        new_q = old_q + self._learning_rate * (reward + self._discount_factor * max_q - old_q)
+        self._Q[(self._last_state, self._last_action)] = new_q        
 
-class QMatrixHeuristic(QMatrix):
-    '''
-    Attributes:        
-        dist_func (function): to calculate distance between two points (s1, a1) and (s2, a2)
-        sample_size (int): how many samples to take when heuristically averaging and estimating Q(s,a)
-    '''
-
-    def __init__(self, actions, dist_func, epsilon=0.1, learning_rate=0.5, discount_factor=0.999):
-        super().__init__(actions, epsilon, learning_rate, discount_factor)        
-        self.dist_func = dist_func
-        self.sample_size = 100
-    
+class TabularQMatrix(QMatrix):
+    # Override base class abstractmethod
     def _get_q(self, state, action):
+        return self._Q.get((state, action), 0)
+
+class KernelSmoothingQMatrix(QMatrix):
+    ''' Use kernel smoothing to estimate Q(s,a) if this has not been found before
+    Attributes:
+        _kernel_func (function): to calculate K(x1,x2) = D(||x1-x2||) where x1 = (s1, a1) and x2 = (s2, a2)
+        _sample_size (int): how many samples to take from existing Q(s,a) as training data for kernel smoother
+    '''
+
+    def __init__(self, actions, kernel_func, epsilon, learning_rate, discount_factor, sample_size=100):
+        super().__init__(actions, epsilon, learning_rate, discount_factor)
+        self._kernel_func = kernel_func
+        self._sample_size = sample_size
+    
+    # Override base class abstractmethod
+    def _get_q(self, state, action):        
+        if not self._Q:
+            return 0
         if (state, action) in self._Q:
             return self._Q[(state, action)]
-        elif not self._Q:
-            return 0
-        else:
-            # guess the value of Q(state, action) via sampling and averaging
-            sample_size = min(self.sample_size, len(self._Q))
-            batch = random.sample(self._Q.keys(), sample_size)
-            distances, q_vals = [], []
-            x1 = [*state, action] # coordinate of this point
-            for that_state, that_action in batch:
-                x2 = [*that_state, that_action] # coordinate of that point
-                distance = self.dist_func(x1, x2)
-                q_val = self._Q[(that_state, that_action)]
-                distances.append(distance)
-                q_vals.append(q_val)
-            
-            distances = np.array(distances)
-            q_vals = np.array(q_vals)
-            estimate = distances.dot(q_vals) / distances.sum()
-            self._Q[(state, action)] = estimate
-            return estimate
+        
+        # now that (state, action) is not in Q, try to estimate Q(state, action) via smoothing
+        # first sample a training data from existing Q(s,a)
+        sample_size = min(self._sample_size, len(self._Q))
+        batch = random.sample(self._Q.keys(), sample_size)
+
+        k_vals, q_vals = [], []
+        x0 = [*state, action] 
+        for that_state, that_action in batch:
+            x2 = [*that_state, that_action]
+            k_vals.append(self._kernel_func(x0, x2))
+            q_vals.append(self._Q[(that_state, that_action)])
+        
+        k_vals = np.array(k_vals)
+        q_vals = np.array(q_vals)
+        estimate = k_vals.dot(q_vals) / k_vals.sum()
+        self._Q[(state, action)] = estimate
+        return estimate
 
 class DQNLearner(QLearner):
     ''' Class for a Q-learner that uses a network to estimate Q(s,a) for all a
@@ -183,7 +176,7 @@ class DQNLearner(QLearner):
         _model (Sequential): a network using keras Sequential
     '''
     
-    def __init__(self, actions, model, epsilon=0.1, discount_factor=0.999):        
+    def __init__(self, actions, model, epsilon, discount_factor):
         super().__init__(actions)
         self._epsilon = epsilon        
         self._discount_factor = discount_factor
