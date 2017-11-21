@@ -1,25 +1,21 @@
-from stock import Stock, OUStock
-
 class StockExchange(object):
     ''' A class to execute buy or sell order for a single stock 
     For a lot size of 100 shares and tick of 0.1, an order to buy 120 shares will have the last 20 executed at price + 0.1
     Attributes:
         stock (Stock): the only stock on this exchange
-        lot (int): the lot size 
-        tick (float): the tick measured in USD
+        lot (int): the lot size         
         impact (float): must be between 0 (all temporary impact) and 1 (full permanent impact)
         num_shares_owned (int): the position the agent has at this exchange
         max_holding (int): the max number of shares the agent can long or short in cumulative position
     '''
     
-    def __init__(self, stock, lot=100, impact=0, max_holding=1000):
+    def __init__(self, stock, lot, impact, max_holding):
         if impact < 0 or impact > 1:
             raise ValueError('impact must be a float between 0 and 1')
         if lot < 0 or max_holding < 0:
             raise ValueError('lot and max_holding must be positive')        
-        self.stock = stock
-        self.tick = stock.tick
-        self.lot = lot        
+        self.stock = stock        
+        self.lot = lot
         self.impact = impact
         self.max_holding = max_holding
         self.num_shares_owned = 0
@@ -39,6 +35,8 @@ class StockExchange(object):
         # Calculate total amount paid or received by the agent for this order        
         if order == 0:
             return 0
+        if not isinstance(order, int):
+            raise ValueError('order must be type int')
         
         buy_or_sell = order / abs(order)
         
@@ -52,17 +50,18 @@ class StockExchange(object):
         transaction_cost = 0        
         amount_paid = 0
         # the first bid or offer is 1 tick from stock.get_price() which is assumed to be a mid price
-        price_to_execute = self.stock.get_price() + self.tick * buy_or_sell
+        tick = self.stock.tick
+        price_to_execute = self.stock.get_price() + tick * buy_or_sell
         
         while shares_left > 0:
             shares_to_execute = min(self.lot, shares_left)        
             amount_paid += price_to_execute * shares_to_execute * buy_or_sell
             shares_left -= shares_to_execute
-            price_to_execute += self.tick * buy_or_sell
+            price_to_execute += tick * buy_or_sell
             
             # update transaction cost
-            spread_cost = shares_to_execute / self.lot * self.tick
-            impact_cost = (shares_to_execute / self.lot)**2 * self.tick
+            spread_cost = shares_to_execute / self.lot * tick
+            impact_cost = (shares_to_execute / self.lot)**2 * tick
             transaction_cost += spread_cost + impact_cost
         
         # update num_shares_owned

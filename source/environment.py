@@ -1,6 +1,6 @@
 import abc
 
-class Environment(metaclass=abc.ABCMeta):
+class Environment(abc.ABC):
     ''' An environment that can run an agent
     Attributes:        
         learner (QLearner): the agent
@@ -16,7 +16,7 @@ class Environment(metaclass=abc.ABCMeta):
         ''' Run an agent for nrun iterations
         Args:
             util (float): the constant in the utility function
-            nrun (int): number of iterations
+            nrun (int): number of iterations to run
             report (boolean): True to return a list of cumulative_wealth over time
         Returns:
             list: list of cumulative wealth

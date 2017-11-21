@@ -2,7 +2,7 @@ import abc
 import random
 from math import exp
 
-class Stock(metaclass=abc.ABCMeta):
+class Stock(abc.ABC):
     ''' Abstract base class for a stock object
     Attributes:
         _price (float): the current spot price in USD, Must Be Rounded to 1 decimal point        

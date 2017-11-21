@@ -3,7 +3,9 @@ import random
 import math
 import numpy as np
 
-# Adapted from: github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
+# Adapted from:
+# github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
+# keon.io/deep-q-learning/
 
 class QLearner(abc.ABC):
     ''' Abstract base class for a Q-learning agent
