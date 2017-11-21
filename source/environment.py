@@ -24,7 +24,7 @@ class Environment(abc.ABC):
         pass
 
 class StockTradingEnvironment(Environment):
-        
+    # Override base class abstractmethod
     def run(self, util, nrun, report=False):        
         reward = 0
         # state = (stock price, current share holding)
@@ -55,10 +55,10 @@ class StockTradingEnvironment(Environment):
             return None
 
 class OptionHedgingEnvironment(Environment):
-        
+    # Override base class abstractmethod
     def run(self, util, nrun, report=False):
         reward = 0
-        # state = (single stock price, price of option portfolio, current share holding)
+        # state = (stock price, option portfolio price, current share holding)
         state = (self.exchange.get_stock_price(), self.exchange.get_option_price(), 0)
         iter_count, cumulative_wealth = 0, 0
         wealths, deltas, share_holdings = [], [], []

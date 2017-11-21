@@ -14,14 +14,14 @@ class StockExchange(object):
             raise ValueError('impact must be a float between 0 and 1')
         if lot < 0 or max_holding < 0:
             raise ValueError('lot and max_holding must be positive')        
-        self.stock = stock        
+        self._stock = stock        
         self.lot = lot
         self.impact = impact
         self.max_holding = max_holding
         self.num_shares_owned = 0
     
     def get_stock_price(self):
-        return self.stock.get_price()
+        return self._stock.get_price()
 
     def execute(self, order):
         ''' Execute the order, set the stock price based on self.impact, then calculate transaction cost        
@@ -50,8 +50,8 @@ class StockExchange(object):
         transaction_cost = 0        
         amount_paid = 0
         # the first bid or offer is 1 tick from stock.get_price() which is assumed to be a mid price
-        tick = self.stock.tick
-        price_to_execute = self.stock.get_price() + tick * buy_or_sell
+        tick = self._stock.tick
+        price_to_execute = self._stock.get_price() + tick * buy_or_sell
         
         while shares_left > 0:
             shares_to_execute = min(self.lot, shares_left)        
@@ -67,7 +67,7 @@ class StockExchange(object):
         # update num_shares_owned
         self.num_shares_owned += order
         # Based on self.impact, set the new stock price
-        self.stock.set_price(self.stock.get_price() + self.impact * (price_to_execute - self.stock.get_price()))
+        self._stock.set_price(self._stock.get_price() + self.impact * (price_to_execute - self._stock.get_price()))
         
         return transaction_cost
 
@@ -79,8 +79,8 @@ class StockExchange(object):
             float: the new share price
             float: one step pnl based on num_shares_owned and change in stock price
         '''
-        old_price = self.stock.get_price()
-        new_price = self.stock.simulate_price(dt)
+        old_price = self._stock.get_price()
+        new_price = self._stock.simulate_price(dt)
         return new_price, self.num_shares_owned * (new_price - old_price)
 
 class StockOptionExchange(StockExchange):
