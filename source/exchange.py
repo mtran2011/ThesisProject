@@ -88,30 +88,30 @@ class StockOptionExchange(StockExchange):
     Attributes:
         option (EuropeanStockOption): 
     '''
-    def __init__(self, option, lot=100, impact=0, max_holding=100):
+    def __init__(self, option, lot, impact, max_holding):
         super().__init__(option.stock, lot, impact, max_holding)
-        self.option = option 
+        self._option = option
     
     def get_option_price(self):
-        return self.option.price
+        return self._option.price
     
     def execute(self, order):
-        old_option_price = self.option.price
+        old_option_price = self._option.price
         # first calculate the spread and impact cost only
         transaction_cost = super().execute(order)
         # reprice option after market impact has moved underlying stock
-        new_option_price = self.option.find_price()
+        new_option_price = self._option.find_price()
         # the number of option held is constant and equal to max_holding
         # if option price increased, it reduces your cost
         transaction_cost -= (new_option_price - old_option_price) * self.max_holding
         return transaction_cost
     
     def simulate_stock_price(self, dt=1.0):
-        old_option_price = self.option.price
+        old_option_price = self._option.price
         # pnl from movement of the stock only
         new_stock_price, pnl = super().simulate_stock_price()        
         # reprice the option
-        self.option.tau -= dt # because time has moved by dt step
-        new_option_price = self.option.find_price()
+        self._option.tau -= dt # because time has moved by dt step
+        new_option_price = self._option.find_price()
         pnl += (new_option_price - old_option_price) * self.max_holding
         return new_stock_price, pnl
