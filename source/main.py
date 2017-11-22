@@ -29,7 +29,7 @@ def make_stock_exchange():
     stock = OUStock(price=10, kappa=0.1, mu=12, sigma=0.2, tick=0.1, band=1000)
     lot = 10
     actions = list(range(-3*lot, 4*lot, lot))
-    exchange = StockExchange(stock, lot=lot, impact=0, max_holding=100)
+    exchange = StockExchange(stock, lot=lot, impact=0, max_holding=15*lot)
     return actions, exchange
 '''
 def make_option_exchange():
@@ -55,7 +55,7 @@ def run_qmatrix_option_hedging():
 '''
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
-    util, ntrain, ntest = 1e-3, int(1e5), 5000
+    util, ntrain, ntest = 1e-3, int(2e4), 5000
     
     # for SemiGradQLearner
     '''
@@ -83,7 +83,7 @@ def run_qmatrix_stock_trading():
 
     graph_performance([wealths_tabular_qmatrix, wealths_smoothing_qmatrix],
                       ['tabular Q matrix', 'smoothing Q matrix'], ntrain)
-
+'''
 def run_dqn_stock_trading():
     actions, exchange = make_stock_exchange()
     util, ntrain, ntest = 1e-3, int(1e6), 5000
@@ -95,6 +95,6 @@ def run_dqn_stock_trading():
     environment.run(util, ntrain)    
     wealths = environment.run(util, ntest, report=True)
     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)    
-
+'''
 if __name__ == '__main__':
     run_qmatrix_stock_trading()
