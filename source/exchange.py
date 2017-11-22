@@ -91,7 +91,7 @@ class StockExchange(object):
 class StockOptionExchange(StockExchange):
     ''' Assume that the number of options held on exchange is constant and equal to max_holding
     Attributes:
-        option (EuropeanStockOption): 
+        option (EuropeanStockOption): the option
     '''
     def __init__(self, option, lot, impact, max_holding):
         super().__init__(option.stock, lot, impact, max_holding)
@@ -107,24 +107,41 @@ class StockOptionExchange(StockExchange):
         ''' Return delta of the option portfolio scaled to max_holding
         '''
         return self._option.get_delta() * self.max_holding
+    
+    def check_option_expired(self):
+        ''' Return True if the option has already expired
+        '''
+        return self._option.tau < 0
+    
+    def new_option_episode(self):
+        ''' Reset the option.tau to original expiry. Also the option is repriced.
+        '''
+        self._option.reset_tau()
 
     def execute(self, order):
-        old_option_price = self._option.price
+        ''' Execute the order, set the stock price based on impact 
+        Transaction cost = spread cost + impact cost + change in option value
+        '''
+        old_option_price = self.get_option_price()
         # first calculate the spread and impact cost only
+        # also move the stock a few ticks based on impact
         transaction_cost = super().execute(order)
         # reprice option after market impact has moved underlying stock
-        new_option_price = self._option.find_price()
-        # the number of option held is constant and equal to max_holding
+        new_option_price = self._option.update_price() * self.max_holding
+        
         # if option price increased, it reduces your cost
-        transaction_cost -= (new_option_price - old_option_price) * self.max_holding
+        transaction_cost -= (new_option_price - old_option_price)
         return transaction_cost
     
     def simulate_stock_price(self, dt=1.0):
-        old_option_price = self._option.price
+        ''' Return new simulated stock price and one step pnl from both stock and repriced option
+        Decrement option.tau by time step dt
+        '''
+        old_option_price = self.get_option_price()
         # pnl from movement of the stock only
-        new_stock_price, pnl = super().simulate_stock_price()        
+        new_stock_price, pnl = super().simulate_stock_price(dt)
         # reprice the option
         self._option.tau -= dt # because time has moved by dt step
-        new_option_price = self._option.find_price()
-        pnl += (new_option_price - old_option_price) * self.max_holding
+        new_option_price = self._option.update_price() * self.max_holding
+        pnl += new_option_price - old_option_price
         return new_stock_price, pnl
