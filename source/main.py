@@ -1,7 +1,7 @@
 import itertools
 from math import log
 import matplotlib.pyplot as plt
-from stock import OUStock, OULogStock, GBMStock
+from stock import OUStock, GBMStock
 from exchange import StockExchange, StockOptionExchange
 from qlearner import TabularQMatrix, KernelSmoothingQMatrix
 from environment import StockTradingEnvironment, OptionHedgingEnvironment
@@ -34,8 +34,8 @@ def make_stock_exchange():
     return actions, exchange
 
 def make_option_exchange():
-    stock = GBMStock(price=10, mu=0.005, sigma=0.01, tick=0.1, band=1000)
-    option = EuropeanStockOption(stock, strike=10, expiry=252, rate=0.001, is_call=True)
+    stock = GBMStock(price=8, mu=0.005, sigma=0.001, tick=0.1, band=1000)
+    option = EuropeanStockOption(stock, strike=10, expiry=30, rate=0.001, is_call=True)
     lot = 10
     actions = list(range(-5*lot, 6*lot, lot))
     exchange = StockOptionExchange(option, lot=lot, impact=0, max_holding=5*lot)
@@ -43,7 +43,7 @@ def make_option_exchange():
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(1e3), 1000
+    util, ntrain, ntest = 1e-3, int(100), 100
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     # for KernelSmoothingQMatrix using inverse L2 distance
     kernel = lambda x1, x2: kernel_function.inverse_norm_p(x1, x2, p=2)

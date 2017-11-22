@@ -106,7 +106,7 @@ class StockOptionExchange(StockExchange):
     def get_option_delta(self):
         ''' Return delta of the option portfolio scaled to max_holding
         '''
-        return self._option.get_delta() * self.max_holding
+        return self._option.get_delta()
     
     def check_option_expired(self):
         ''' Return True if the option has already expired
