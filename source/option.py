@@ -48,10 +48,15 @@ class EuropeanStockOption(object):
         if T < 0:
             self._price = 0
             self._delta = 0
+            return self._price
         s = self.stock.get_price()
         if T == 0:
             self._price = max(s-k, 0) if self.is_call else max(-s+k, 0)
-            self._delta = 1
+            if self.is_call:
+                self._delta = 1 if s > k else 0
+            else:
+                self._delta = -1 if s < k else 0
+            return self._price
         
         sig = self.stock.sigma        
 
