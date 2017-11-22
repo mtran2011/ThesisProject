@@ -1,6 +1,6 @@
 import abc
 import random
-from math import exp
+from math import exp, log
 
 class Stock(abc.ABC):
     ''' Abstract base class for a stock object
@@ -68,6 +68,19 @@ class OUStock(Stock):
         dW = dt**0.5 * random.gauss(0.0, 1.0)
         new_price = self._price + self.kappa * (self.mu - self._price) * dt + self.sigma * dW
         self.set_price(new_price)        
+        return self._price
+
+class OULogStock(OUStock):
+    ''' Stock with dS following an OU process
+    dlogS = kappa * (mu - logS) * dt + sigma * dW where var(dW) = dt    
+    '''
+
+    # Override base class abstractmethod
+    def simulate_price(self, dt=1.0):
+        dW = dt**0.5 * random.gauss(0.0, 1.0)
+        old_log = log(max(1e-4, self._price))
+        new_log = old_log + self.kappa * (self.mu - old_log) * dt + self.sigma * dW
+        self.set_price(exp(new_log))
         return self._price
 
 class GBMStock(Stock):
