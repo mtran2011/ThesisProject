@@ -1,7 +1,7 @@
 import itertools
 from math import log
 import matplotlib.pyplot as plt
-from stock import OUStock, GBMStock
+from stock import OUStock, OULogStock, GBMStock
 from exchange import StockExchange, StockOptionExchange
 from qlearner import TabularQMatrix, KernelSmoothingQMatrix
 from environment import StockTradingEnvironment, OptionHedgingEnvironment
@@ -27,36 +27,23 @@ def graph_performance(wealths_list, agent_names, ntrain):
     plt.savefig('../figs/newfig.png')
 
 def make_stock_exchange():
-    stock = OUStock(price=10, kappa=0.1, mu=log(15), sigma=0.2, tick=0.1, band=1000)
+    stock = OULogStock(price=10, kappa=0.1, mu=log(15), sigma=0.2, tick=0.1, band=1000)
     lot = 10
     actions = list(range(-3*lot, 4*lot, lot))
     exchange = StockExchange(stock, lot=lot, impact=0, max_holding=15*lot)
     return actions, exchange
 
 def make_option_exchange():
-    stock = GBMStock(price=100, mu=0.005, sigma=0.005, tick=0.1, band=1000)
-    option = EuropeanStockOption(stock, strike=105, expiry=60, rate=0.001, is_call=True)
+    stock = GBMStock(price=100, mu=0.001, sigma=0.01, tick=0.01, band=1000)
+    option = EuropeanStockOption(stock, strike=105, expiry=252, is_call=True)
     lot = 10
     actions = list(range(-5*lot, 6*lot, lot))
     exchange = StockOptionExchange(option, lot=lot, impact=0, max_holding=5*lot)
     return actions, exchange
 
-def run_qmatrix_option_hedging():
-    actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(100), 100
-    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
-    # for KernelSmoothingQMatrix using inverse L2 distance
-    kernel = lambda x1, x2: kernel_function.inverse_norm_p(x1, x2, p=2)
-    smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel, epsilon, learning_rate, discount_factor)
-    environment = OptionHedgingEnvironment(smoothing_qlearner, exchange)
-    environment.run(util, ntrain)
-    deltas, share_holdings = environment.run(util, ntest, report=True)
-
-    graph_performance([deltas, share_holdings], ['scaled option delta', 'share holding'], ntrain)
-
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
-    util, ntrain, ntest = 1e-3, int(2e4), 5000
+    util, ntrain, ntest = 1e-3, int(1e5), 5000
     
     # for SemiGradQLearner
     '''
@@ -84,6 +71,19 @@ def run_qmatrix_stock_trading():
 
     graph_performance([wealths_tabular_qmatrix, wealths_smoothing_qmatrix],
                       ['tabular Q matrix', 'smoothing Q matrix'], ntrain)
+
+def run_qmatrix_option_hedging():
+    actions, exchange = make_option_exchange()
+    util, ntrain, ntest = 1e-3, int(2e4), 1000
+    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
+    # for KernelSmoothingQMatrix using inverse L2 distance
+    kernel = lambda x1, x2: kernel_function.inverse_norm_p(x1, x2, p=2)
+    smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel, epsilon, learning_rate, discount_factor)
+    environment = OptionHedgingEnvironment(smoothing_qlearner, exchange)
+    environment.run(util, ntrain)
+    wealths = environment.run(util, ntest, report=True)
+
+    graph_performance([wealths], ['inverse L2 norm smoothing'], ntrain)
 
 '''
 def run_dqn_stock_trading():

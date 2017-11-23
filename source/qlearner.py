@@ -145,7 +145,7 @@ class KernelSmoothingQMatrix(QMatrix):
         _sample_size (int): how many samples to take from existing Q(s,a) as training data for kernel smoother
     '''
 
-    def __init__(self, actions, kernel_func, epsilon, learning_rate, discount_factor, sample_size=100):
+    def __init__(self, actions, kernel_func, epsilon, learning_rate, discount_factor, sample_size=30):
         super().__init__(actions, epsilon, learning_rate, discount_factor)
         self._kernel_func = kernel_func
         self._sample_size = sample_size

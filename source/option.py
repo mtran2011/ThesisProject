@@ -13,12 +13,12 @@ class EuropeanStockOption(object):
         _price (float): the price of this option
         _delta (float): the delta of this option
     '''
-    def __init__(self, stock, strike, expiry, rate, is_call=True):
+    def __init__(self, stock, strike, expiry, is_call=True):
         self.stock = stock
         self.strike = strike
         self.expiry = expiry
         self.tau = expiry
-        self.rate = rate
+        self.rate = stock.mu
         self.is_call = is_call
         self._price = None
         self._delta = None
@@ -62,7 +62,6 @@ class EuropeanStockOption(object):
 
         d1 = (log(s / k) + (r + 0.5 * sig**2) * T) / (sig * T**0.5)
         d2 = d1 - sig * T**0.5
-        print(T)
         if self.is_call:
             self._delta = norm.cdf(d1)
             self._price = s * self._delta - k * exp(-r*T) * norm.cdf(d2)

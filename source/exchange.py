@@ -122,7 +122,7 @@ class StockOptionExchange(StockExchange):
         ''' Execute the order, set the stock price based on impact 
         Transaction cost = spread cost + impact cost + change in option value
         '''
-        old_option_price = self.get_option_price()
+        old_option_price = self._option.get_price() * self.max_holding
         # first calculate the spread and impact cost only
         # also move the stock a few ticks based on impact
         transaction_cost = super().execute(order)

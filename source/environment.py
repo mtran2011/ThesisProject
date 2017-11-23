@@ -68,6 +68,7 @@ class OptionHedgingEnvironment(Environment):
         # state = (stock price, option portfolio price, current share holding)
         state = (self.exchange.get_stock_price(), self.exchange.get_option_price(), 0)        
         deltas, share_holdings = [], []
+        wealths, cumulative_wealth = [], 0
         for iter_count in range(1,nrun+1):
             # order should aim for a total position close to current delta
             order = self.learner.learn(reward, state)
@@ -94,10 +95,14 @@ class OptionHedgingEnvironment(Environment):
             reward = - delta_wealth**2
             state = (new_stock_price, self.exchange.get_option_price(), self.exchange.num_shares_owned)
 
+            if report:
+                cumulative_wealth += delta_wealth
+                wealths.append(cumulative_wealth)
+
             if iter_count % 20000 == 0:
                 print('finished {:,} runs'.format(iter_count))
         
         if report:
-            return deltas, share_holdings            
+            return wealths        
         else:
             return None
