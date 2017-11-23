@@ -76,7 +76,7 @@ class OptionHedgingEnvironment(Environment):
             if report:
                 # compare current delta and the holdings the agent aims at
                 # the holding in option is constant at max_holding so remember to scale delta with share_holdings
-                deltas.append(self.exchange.get_option_delta())
+                deltas.append(self.exchange.get_option_delta())                
                 share_holdings.append(self.exchange.num_shares_owned / self.exchange.max_holding)
             
             # after order is executed and the agent had aimed for delta, now the stock moves
@@ -98,8 +98,6 @@ class OptionHedgingEnvironment(Environment):
                 print('finished {:,} runs'.format(iter_count))
         
         if report:
-            # todo
-            print(deltas)
             return deltas, share_holdings            
         else:
             return None

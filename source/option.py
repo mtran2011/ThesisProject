@@ -47,7 +47,7 @@ class EuropeanStockOption(object):
 
         if T < 0:
             self._price = 0
-            self._delta = 0
+            self._delta = 0            
             return self._price
         s = self.stock.get_price()
         if T == 0:
@@ -62,6 +62,7 @@ class EuropeanStockOption(object):
 
         d1 = (log(s / k) + (r + 0.5 * sig**2) * T) / (sig * T**0.5)
         d2 = d1 - sig * T**0.5
+        print(T)
         if self.is_call:
             self._delta = norm.cdf(d1)
             self._price = s * self._delta - k * exp(-r*T) * norm.cdf(d2)
