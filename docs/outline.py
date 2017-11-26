@@ -1,4 +1,19 @@
 '''
+class Environment:
+    To manage the back and forth between agent-learner and an exchange. First the exchange reports a bunch of info on price, etc. 
+    Use this info to calculate a reward r. Combine these info into a tuple or a state s. Show (r,s) to agent. 
+    Agent gives back an action/order. Pass this order to exchange to execute, get transaction cost from it. Form a new (r,s) and so on
+
+    For the option case, an episode finishes when the option expires. You need to restart a new episode.
+    So, if the exchange reports that the option has expired, environment has to reset by calling learner.reset() and exchange.reset()
+
+    Attributes:
+        learner: the agent
+        exchange: the exchange
+    Methods:
+        run(nrun): run the above for nrun iterations
+
+
 class Stock:
     Attributes:
         mu, sigma: input constant parameters
@@ -36,12 +51,15 @@ class StockExchange:
 
 class StockOptionExchange(StockExchange):
     Inherits above. But when it simulates the stock, the PnL = PnL in stock + PnL from a portfolio of options
-    Important: the number of options held is always fixed at max_holding
+    Important: we assume the number of options held is always fixed at exchange.max_holding
 
     Attributes:
         option: added field for the underlying option
     Methods:
         simulate_stock_price(dt): simulates the stock, decrement option.tau by dt, reprice the option, return combined PnL
+
+class QLearner:
+    This is the Q-learning agent
 
 
     
