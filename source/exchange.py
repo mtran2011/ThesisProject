@@ -85,8 +85,7 @@ class StockExchange(object):
         '''
         Args:
             dt (float): length of time step
-        Returns:
-            float: the new share price
+        Returns:            
             float: one step pnl based on num_shares_owned and change in stock price
         '''
         old_price = self._stock.get_price()
@@ -107,16 +106,18 @@ class OptionHedgingExchange(StockExchange):
     def reset_episode(self):
         ''' Reset both the option and the stock
         '''
-        # todo
-        pass
+        # reset num_shares_owned to zero
+        super().reset_episode()
+        # reset option to original expiry and stock to original price
+        self._pair.reset_episode()
 
     def report_option_price(self):
-        ''' Return option price that is already rounded
+        ''' Return option price that is already rounded to tick
         '''
         return self._pair.get_option_price()
     
     def report_option_delta(self):
-        ''' Return delta of the option
+        ''' Return delta of the option, a float
         '''
         return self._pair.get_option_delta()
     
@@ -126,16 +127,12 @@ class OptionHedgingExchange(StockExchange):
         return self._pair.check_option_expired()
     
     def simulate_stock_price(self, dt=1):
-        ''' Return new simulated stock price and one step pnl from both stock and repriced option
+        ''' Return one step pnl from both stock and repriced option
         Decrement option.tau by time step dt
-        '''
-        pass
-        # todo
-        # old_pair_price = self.get_pair_price()
-        # # pnl from movement of the stock only
-        # new_stock_price, pnl = super().simulate_stock_price(dt)
-        # # reprice the option
-        # self._pair.tau -= dt # because time has moved by dt step
-        # new_pair_price = self._pair.update_price() * self.max_holding
-        # pnl += new_pair_price - old_pair_price
-        # return new_stock_price, pnl
+        '''        
+        old_stock_price = self.report_stock_price()
+        old_option_price = self.report_option_price()
+        # self._pair.simulate_stock_price()should decrement option.tau by dt before repricing it
+        new_stock_price, new_option_price = self._pair.simulate_stock_price()
+        pnl = self.num_shares_owned * (new_stock_price - old_stock_price) + self.num_options * (new_option_price - old_option_price)
+        return pnl

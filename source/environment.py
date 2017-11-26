@@ -125,7 +125,9 @@ class TwoFeatureEnvironment(Environment):
         self.exchange.reset_episode()
 
         reward = 0        
-        state = (self.exchange.report_stock_price(), self.exchange.report_option_price())
+        state = (
+            self.exchange.report_stock_price() * self.exchange.num_shares_owned, 
+            self.exchange.report_option_price() * self.exchange.num_options)
         deltas, scaled_share_holdings = [], []
         
         for iter_ct in range(1,nrun+1):
@@ -149,7 +151,9 @@ class TwoFeatureEnvironment(Environment):
                 self.exchange.reset_episode()
             
             reward = -(pnl - transaction_cost)**2
-            state = (self.exchange.report_stock_price(), self.exchange.report_option_price())
+            state = (
+                self.exchange.report_stock_price() * self.exchange.num_shares_owned, 
+                self.exchange.report_option_price() * self.exchange.num_options)
 
             if iter_ct % 10000 == 0:
                 print('finished {:,} runs'.format(iter_ct))
