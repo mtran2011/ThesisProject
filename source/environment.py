@@ -1,15 +1,15 @@
 import abc
 from learner import Learner
-from exchange import Exchange
+from exchange import StockExchange
 
 class Environment(abc.ABC):
     ''' An environment that can run an agent
     Attributes:        
         learner (Learner): the agent
-        exchange (Exchange): the exchange
+        exchange (StockExchange): the exchange
     '''    
 
-    def __init__(self, learner : Learner, exchange : Exchange):
+    def __init__(self, learner : Learner, exchange : StockExchange):
         self.learner = learner
         self.exchange = exchange
     
@@ -79,7 +79,7 @@ class OptionHedgingEnvironment(Environment):
             self.exchange.report_stock_price(), 
             self.exchange.report_option_price(), 
             self.exchange.num_shares_owned)
-        deltas, share_holdings = [], []
+        deltas, scaled_share_holdings = [], []
         
         for iter_ct in range(1,nrun+1):
             # order should aim for a total position close to current delta
@@ -87,10 +87,9 @@ class OptionHedgingEnvironment(Environment):
             transaction_cost = self.exchange.execute(order)
             
             if report:
-                # compare current delta and the holdings the agent aims at
-                # the holding in option is constant at num_options so remember to scale delta with share_holdings
-                deltas.append(self.exchange.report_option_delta())                
-                share_holdings.append(self.exchange.num_shares_owned / self.exchange.num_options)
+                # compare current delta and the holdings the agent aims at, on the same scale 0-1
+                deltas.append(self.exchange.report_option_delta())
+                scaled_share_holdings.append(self.exchange.num_shares_owned / self.exchange.num_options)
             
             # after order is executed and the agent had aimed for delta, now the stock moves
             # the exchange simulates the stock and calculate pnl from both stock AND option
@@ -112,6 +111,11 @@ class OptionHedgingEnvironment(Environment):
                 print('finished {:,} runs'.format(iter_ct))
         
         if report:
-            return deltas, share_holdings        
+            return deltas, scaled_share_holdings        
         else:
             return None
+
+class TrialEnvironment(Environment):
+    # only two state features
+    # state is (value of option portfolio, value of stock holdings)
+    pass

@@ -1,5 +1,5 @@
-''' Module for the Exchange class
-'''
+from stock import Stock
+from option import Pair
 
 class StockExchange(object):
     ''' A class to execute buy or sell order for a single stock 
@@ -8,11 +8,11 @@ class StockExchange(object):
         stock (Stock): the only stock on this exchange
         lot (int): the lot size         
         impact (float): must be between 0 (all temporary impact) and 1 (full permanent impact)
-        num_shares_owned (int): the position the agent has at this exchange
         max_holding (int): the max number of shares the agent can long or short in cumulative position
+        num_shares_owned (int): the position the agent has at this exchange        
     '''
     
-    def __init__(self, stock, lot, impact, max_holding):
+    def __init__(self, stock : Stock, lot : int, impact : float, max_holding : int):
         if impact < 0 or impact > 1:
             raise ValueError('impact must be a float between 0 and 1')
         if lot < 0 or max_holding < 0:
@@ -23,12 +23,17 @@ class StockExchange(object):
         self.max_holding = max_holding
         self.num_shares_owned = 0
     
-    def get_stock_price(self):
+    def reset_episode(self):
+        ''' Reset is like starting a new game episode
+        '''
+        self.num_shares_owned = 0
+
+    def report_stock_price(self):
         ''' Return stock price that is already rounded
         '''
         return self._stock.get_price()
 
-    def execute(self, order):
+    def execute(self, order : int):
         ''' Execute the order, set the stock price based on self.impact, then calculate transaction cost        
         Args:
             order (int): how many shares to buy (positive) or sell (negative)
@@ -76,7 +81,7 @@ class StockExchange(object):
         
         return transaction_cost
 
-    def simulate_stock_price(self, dt=1.0):
+    def simulate_stock_price(self, dt=1):
         '''
         Args:
             dt (float): length of time step
@@ -86,62 +91,51 @@ class StockExchange(object):
         '''
         old_price = self._stock.get_price()
         new_price = self._stock.simulate_price(dt)
-        return new_price, self.num_shares_owned * (new_price - old_price)
+        return self.num_shares_owned * (new_price - old_price)
 
-class StockOptionExchange(StockExchange):
+class OptionHedgingExchange(StockExchange):
     ''' Assume that the number of options held on exchange is constant and equal to max_holding
     Attributes:
-        option (EuropeanStockOption): the option
+        pair (Pair): a pair of option and stock
+        num_options (int): number of options held, always constant, never changes
     '''
-    def __init__(self, option, lot, impact, max_holding):
-        super().__init__(option.stock, lot, impact, max_holding)
-        self._option = option
+    def __init__(self, pair : Pair, lot : int, impact : float, max_holding : int):
+        super().__init__(pair.get_stock(), lot, impact, max_holding)
+        self._pair = pair
+        self.num_options = max_holding
     
-    def get_option_price(self):
+    def reset_episode(self):
+        ''' Reset both the option and the stock
+        '''
+        # todo
+        pass
+
+    def report_option_price(self):
         ''' Return option price that is already rounded
-        The option portfolio is constant at max_holding so have to scale to that
         '''
-        return self._option.get_price() * self.max_holding
+        return self._pair.get_option_price()
     
-    def get_option_delta(self):
-        ''' Return delta of the option portfolio scaled to max_holding
+    def report_option_delta(self):
+        ''' Return delta of the option
         '''
-        return self._option.get_delta()
+        return self._pair.get_option_delta()
     
     def check_option_expired(self):
         ''' Return True if the option has already expired
         '''
-        return self._option.tau < 0
+        return self._pair.check_option_expired()
     
-    def new_option_episode(self):
-        ''' Reset the option.tau to original expiry. Also the option is repriced.
-        '''
-        self._option.reset_tau()
-
-    def execute(self, order):
-        ''' Execute the order, set the stock price based on impact 
-        Transaction cost = spread cost + impact cost + change in option value
-        '''
-        old_option_price = self._option.get_price() * self.max_holding
-        # first calculate the spread and impact cost only
-        # also move the stock a few ticks based on impact
-        transaction_cost = super().execute(order)
-        # reprice option after market impact has moved underlying stock
-        new_option_price = self._option.update_price() * self.max_holding
-        
-        # if option price increased, it reduces your cost
-        transaction_cost -= (new_option_price - old_option_price)
-        return transaction_cost
-    
-    def simulate_stock_price(self, dt=1.0):
+    def simulate_stock_price(self, dt=1):
         ''' Return new simulated stock price and one step pnl from both stock and repriced option
         Decrement option.tau by time step dt
         '''
-        old_option_price = self.get_option_price()
-        # pnl from movement of the stock only
-        new_stock_price, pnl = super().simulate_stock_price(dt)
-        # reprice the option
-        self._option.tau -= dt # because time has moved by dt step
-        new_option_price = self._option.update_price() * self.max_holding
-        pnl += new_option_price - old_option_price
-        return new_stock_price, pnl
+        pass
+        # todo
+        # old_pair_price = self.get_pair_price()
+        # # pnl from movement of the stock only
+        # new_stock_price, pnl = super().simulate_stock_price(dt)
+        # # reprice the option
+        # self._pair.tau -= dt # because time has moved by dt step
+        # new_pair_price = self._pair.update_price() * self.max_holding
+        # pnl += new_pair_price - old_pair_price
+        # return new_stock_price, pnl
