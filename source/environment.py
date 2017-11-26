@@ -115,7 +115,46 @@ class OptionHedgingEnvironment(Environment):
         else:
             return None
 
-class TrialEnvironment(Environment):
-    # only two state features
-    # state is (value of option portfolio, value of stock holdings)
-    pass
+class TwoFeatureEnvironment(Environment):
+    ''' Try option hedging with state consisting of only two features
+    Each state is (value of option portfolio, value of stock holdings)
+    '''
+    # Override base class abstractmethod
+    def run(self, util, nrun, report=False):
+        self.learner.reset_last_action()
+        self.exchange.reset_episode()
+
+        reward = 0        
+        state = (self.exchange.report_stock_price(), self.exchange.report_option_price())
+        deltas, scaled_share_holdings = [], []
+        
+        for iter_ct in range(1,nrun+1):
+            # order should aim for a total position close to current delta
+            order = self.learner.learn(reward, state)            
+            transaction_cost = self.exchange.execute(order)
+            
+            if report:
+                # compare current delta and the holdings the agent aims at, on the same scale 0-1
+                deltas.append(self.exchange.report_option_delta())
+                scaled_share_holdings.append(self.exchange.num_shares_owned / self.exchange.num_options)
+            
+            # after order is executed and the agent had aimed for delta, now the stock moves
+            # the exchange simulates the stock and calculate pnl from both stock AND option
+            pnl = self.exchange.simulate_stock_price()
+
+            # if after 1 step simulation, option.tau = -1, the pnl above is invalid, the reward is invalid
+            # need to reset and do not use the invalid reward for internal learner training
+            if self.exchange.check_option_expired():
+                self.learner.reset_last_action()
+                self.exchange.reset_episode()
+            
+            reward = -(pnl - transaction_cost)**2
+            state = (self.exchange.report_stock_price(), self.exchange.report_option_price())
+
+            if iter_ct % 10000 == 0:
+                print('finished {:,} runs'.format(iter_ct))
+        
+        if report:
+            return deltas, scaled_share_holdings        
+        else:
+            return None
