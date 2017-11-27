@@ -128,11 +128,11 @@ class OptionHedgingExchange(StockExchange):
     
     def simulate_stock_price(self, dt=1):
         ''' Return one step pnl from both stock and repriced option
-        Decrement option.tau by time step dt
-        '''        
+        Remember option.tau should be decremented by time step dt
+        '''
         old_stock_price = self.report_stock_price()
         old_option_price = self.report_option_price()
         # self._pair.simulate_stock_price()should decrement option.tau by dt before repricing it
-        new_stock_price, new_option_price = self._pair.simulate_stock_price()
+        new_stock_price, new_option_price = self._pair.simulate_stock_price(dt)
         pnl = self.num_shares_owned * (new_stock_price - old_stock_price) + self.num_options * (new_option_price - old_option_price)
         return pnl
