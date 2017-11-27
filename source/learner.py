@@ -41,7 +41,20 @@ class Learner(abc.ABC):
             None: train internal model based on (self._last_state, self._last_action, reward, new_state)
         '''
         pass
-    
+
+    @abc.abstractclassmethod
+    def learn(self, reward, new_state):
+        ''' Get a reward and see a new_state. Use these to do some internal training. Then return a new action.        
+        Update _last_state <- new_state
+        Update _last_action <- best_action        
+        Args:
+            reward (float): the reward seen after the previous action
+            new_state (tuple): the new_state seen after the previous action
+        Returns:
+            best_action (object): take a new action based on new_state
+        '''
+        pass
+
     def reset_last_action(self):
         ''' Reset to prepare to play a new episode
         '''

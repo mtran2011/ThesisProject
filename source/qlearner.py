@@ -10,7 +10,8 @@ from learner import Learner
 class QLearner(Learner):
     ''' Abstract base class for a Q-learning agent    
     '''
-
+    
+    # Override base class abstractmethod
     def learn(self, reward, new_state):
         ''' Get a reward and see a new_state. Use these to do some internal training. Then return a new action.        
         Update _last_state <- new_state
