@@ -5,12 +5,10 @@ from stock import GBMStock
 class EuropeanOption(object):
     ''' European stock option on a non-dividend paying stock
     Attributes:
-        _stock (GBMStock): the underlying stock object
-        _strike (float): the strike
-        _expiry (int): the original time to expiry        
-        _is_call (bool): True if this is a call
-        _rate (float): risk free rate
-        _tau (int): the remaining time to expiry
+        stock (GBMStock): the underlying stock object
+        strike (float): the strike
+        tau (int): the remaining time to expiry
+        is_call (bool): True if this is a call
         _price (float): the price of this option
         _delta (float): the delta of this option
     '''
@@ -18,20 +16,13 @@ class EuropeanOption(object):
         if expiry <= 0:
             raise ValueError('original expiry must be positive')
         self.stock = stock
-        self.strike = strike
-        self.expiry = expiry
-        self.is_call = is_call
+        self.strike = strike        
         self.tau = expiry
-        
-        self._rate = stock.mu        
+        self.is_call = is_call        
+                
         self._price = None
         self._delta = None
-        self.update_price()
-    
-    def has_expired(self):
-        ''' Return True if this option has expired
-        '''
-        return self.tau < 0
+        self.update_price()        
 
     def update_price(self):
         ''' Update self._price and self._delta. These 2 data must be private.
@@ -41,7 +32,7 @@ class EuropeanOption(object):
             float: the option price rounded to tick
             float: the option delta
         '''
-        r, k, T = self._rate, self.strike, self.tau
+        r, k, T = self.stock.mu, self.strike, self.tau
 
         if T < 0:
             self._price = 0
@@ -76,6 +67,7 @@ class Pair(object):
     '''
     def __init__(self, stock : GBMStock, strike : float, expiry : int, is_call : bool):
         # to memorize the original attributes of stock and option
+        # these attributes should never change throughout the life of this pair object
         self._strike = strike
         self._expiry = expiry
         self._is_call = is_call        
@@ -111,7 +103,7 @@ class Pair(object):
     def check_option_expired(self):
         ''' Return True if this option has expired
         '''
-        return self._option.has_expired()
+        return self._option.tau < 0
     
     def simulate_stock_price(self, dt=1):
         ''' Simulate the stock for one step dt, decrement option.tau, and reprice the option
@@ -119,5 +111,7 @@ class Pair(object):
             float: new_stock_price 
             float: new_option_price
         '''
-        self._stock.simulate_price(dt)
-        pass
+        new_stock_price= self._stock.simulate_price(dt)
+        self._option.tau -= dt
+        self._option_price, self._option_delta = self._option.update_price()
+        return new_stock_price, self._option_price
