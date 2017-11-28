@@ -63,9 +63,9 @@ class StockTradingEnvironment(Environment):
         else:
             return None
 
-class OptionHedgingEnvironment(Environment):
-    '''
-    Attributes:        
+class ThreeFeatureOptionHedging(Environment):
+    ''' Each state has 3 features (stock price, option price, num shares owned)
+    Attributes:
         learner (Learner): the agent
         exchange (OptionHedgingExchange): the exchange for option hedging only
     '''
@@ -115,7 +115,7 @@ class OptionHedgingEnvironment(Environment):
         else:
             return None
 
-class TwoFeatureEnvironment(Environment):
+class TwoFeatureOptionHedging(Environment):
     ''' Try option hedging with state consisting of only two features
     Each state is (value of option portfolio, value of stock holdings)
     '''

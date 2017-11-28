@@ -17,6 +17,7 @@ class Learner(abc.ABC):
     @abc.abstractmethod
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):
         ''' Given the state, find the best action using epsilon-greedy
+        With probability of epsilon, pick a random action. Else pick a greedy action.
         Args:
             state (tuple): the given state which is a tuple of state attributes
             use_epsilon (bool): True if the randomization using epsilon is to be used
@@ -31,7 +32,7 @@ class Learner(abc.ABC):
     def _train_internally(self, reward, new_state):
         ''' Use reward and new_state to train the internal model.
         The internal training can be:
-            for discrete Q matrix: update Q(_last_state, _last_action)
+            for Q matrix: update Q(_last_state, _last_action) += (reward + gamma * maxQ(new_state,action)) * learning_rate
             for DQN: add the experience (s,a,r,s') to memory and train the internal neural network
             for SemiGradQLearner: via grad descent, update the parameters in the function estimator
         Args:
@@ -42,9 +43,9 @@ class Learner(abc.ABC):
         '''
         pass
 
-    @abc.abstractclassmethod
+    @abc.abstractmethod
     def learn(self, reward, new_state):
-        ''' Get a reward and see a new_state. Use these to do some internal training. Then return a new action.        
+        ''' Get a reward and see a new_state. Use these to do some internal training if _last_action is not None. Return a new action.        
         Update _last_state <- new_state
         Update _last_action <- best_action        
         Args:

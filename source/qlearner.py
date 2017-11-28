@@ -8,9 +8,8 @@ from learner import Learner
 # keon.io/deep-q-learning/
 
 class QLearner(Learner):
-    ''' Abstract base class for a Q-learning agent    
+    ''' Abstract base class for a Q-learning agent
     '''
-    
     # Override base class abstractmethod
     def learn(self, reward, new_state):
         ''' Get a reward and see a new_state. Use these to do some internal training. Then return a new action.        
@@ -90,6 +89,8 @@ class QMatrix(QLearner):
         self._Q[(self._last_state, self._last_action)] = new_q        
 
 class TabularQMatrix(QMatrix):
+    ''' The discrete, tabular Q-matrix learner
+    '''
     # Override base class abstractmethod
     def _get_q(self, state, action):
         return self._Q.get((state, action), 0)
