@@ -16,10 +16,9 @@ class KernelSmoothingRegressor(abc.ABC):
     def fit(self,X,Y):
         ''' Fit training data
         '''
-        if not isinstance(X, numpy.ndarray) or not isinstance(Y, numpy.ndarray):
-            raise ValueError('X and Y must be ndarray')
-        if X.shape[0] != Y.shape[0]:
-            raise ValueError('X and Y must have same first dimension')
+        assert isinstance(X, np.ndarray) and isinstance(Y, np.ndarray)
+        assert X.shape[0] == Y.shape[0]            
+        assert Y.shape[0] == Y.size
         self.X = X
         self.Y = Y
     
@@ -29,9 +28,26 @@ class KernelSmoothingRegressor(abc.ABC):
         '''
         raise NotImplementedError
 
-class NormBasedSmoother(KernelSmoothingRegressor):
+class InverseNormAverage(KernelSmoothingRegressor):
+    ''' Weighted average with inverse distance using norm p = 1 or p = 2
     '''
-    '''
+    def __init__(self, p):
+        if p not in [1,2]:
+            raise ValueError('norm-based kernel should use p=1 or p=2 only')
+        super().__init__()
+        self.p = p
+    
+    # Override
+    def predict(self, X):
+        if self.X is None or self.Y is None:
+            raise ValueError('must have training data first')
+        f_vals = []
+        for x0 in X:
+            # estimate f(x0)
+            d_vals = np.array([1 / np.linalg.norm(x_i - x0, ord=self.p) for x_i in self.X])
+            f_x0 = np.asscalar(np.dot(d_vals, self.Y) / d_vals.sum())
+            f_vals.append(f_x0)
+        return np.array(f_vals)
 
 def inverse_norm_p(x1, x2, p=2):
     '''
