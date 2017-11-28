@@ -1,26 +1,36 @@
+''' Module for Q learner
+'''
+
 import abc
 import random
 import numpy as np
-from learner import Learner
+from learner import Learner, MatrixLearner
 
 # Adapted from:
 # github.com/vmayoral/basic_reinforcement_learning/blob/master/tutorial1/qlearn.py
 # keon.io/deep-q-learning/
 
 class QLearner(Learner):
-    ''' Abstract base class for a Q-learning agent
+    ''' Abstract base class for a Q-learning agent (off policy)
     '''
-    # Override base class abstractmethod
-    def learn(self, reward, new_state):
-        ''' Get a reward and see a new_state. Use these to do some internal training. Then return a new action.        
-        Update _last_state <- new_state
-        Update _last_action <- best_action        
+    
+    @abc.abstractmethod
+    def _train_internally(self, reward, new_state):
+        ''' Use reward and new_state to train the internal model.
+        The internal training can be:
+            for Q matrix: update Q(_last_state, _last_action) += (reward + gamma * maxQ(new_state,action) - old_q) * learning_rate
+            for DQN: add the experience (s,a,r,s') to memory and train the internal neural network
+            for SemiGradQLearner: via grad descent, update the parameters in the function estimator
         Args:
-            reward (float): the reward seen after the previous action
-            new_state (tuple): the new_state seen after the previous action
+            reward (float): the reward seen after taking self._last_action
+            new_state (tuple): the new_state seen after taking self._last_action
         Returns:
-            best_action (object): take a new action based on new_state
+            None: train internal model based on (self._last_state, self._last_action, reward, new_state)
         '''
+        raise NotImplementedError('Not implemented at QLearner base class')
+
+    # Override
+    def learn(self, reward, new_state):
         # if this agent has taken at least one any action before
         if self._last_action is not None and self._last_state is not None:
             self._train_internally(reward, new_state)
@@ -29,53 +39,10 @@ class QLearner(Learner):
         self._last_state = new_state
         return action
 
-class QMatrix(QLearner):
-    ''' Abstract class for a Q-learner matrix that holds the values of Q(s,a)
-    Attributes:
-        _Q (dict): dict of key tuple (s,a) to float value Q(s,a)        
-        _epsilon (float): constant in epsilon-greedy policy
-        _learning_rate (float): the constant learning_rate
-        _discount_factor (float): the constant discount_factor of future rewards        
+class QMatrix(MatrixLearner, QLearner):
+    ''' Abstract class for a Q-learner matrix that holds the values of Q(s,a)    
     '''
-    
-    def __init__(self, actions, epsilon, learning_rate, discount_factor):
-        super().__init__(actions)
-        self._Q = dict()
-        self._epsilon = epsilon
-        self._learning_rate = learning_rate
-        self._discount_factor = discount_factor
-    
-    @abc.abstractmethod
-    def _get_q(self, state, action):
-        ''' Find, or estimate, Q(s,a) for a given state s and action a
-        Args:
-            state (tuple): state s, a tuple of state attributes
-            action (object): action a
-        Returns:
-            float: the value of Q(s,a). 
-        '''
-        pass        
-        
-    # Override base class abstractmethod
-    def _find_action_greedily(self, state, use_epsilon=True, return_q=False):        
-        if use_epsilon and random.random() < self._epsilon:
-            # with probability epsilon, choose from all actions with equal chance
-            best_action = random.choice(self._actions)
-            max_q = None
-            if return_q:
-                max_q = self._get_q(state, best_action)
-        else:
-            # choose action = arg max {action} of Q(state, action)
-            q_values = [self._get_q(state, action) for action in self._actions]
-            max_q = max(q_values)
-            best_action = self._actions[q_values.index(max_q)]
-        
-        if return_q:
-            return best_action, max_q
-        else:
-            return best_action       
-    
-    # Override base class abstractmethod
+    # Override
     def _train_internally(self, reward, new_state):
         # cannot train if never seen a state or took an action before
         if self._last_action is None or self._last_state is None:
@@ -86,12 +53,12 @@ class QMatrix(QLearner):
         # find max over a of Q(s',a)
         _, max_q = self._find_action_greedily(new_state, use_epsilon=False, return_q=True)
         new_q = old_q + self._learning_rate * (reward + self._discount_factor * max_q - old_q)
-        self._Q[(self._last_state, self._last_action)] = new_q        
+        self._Q[(self._last_state, self._last_action)] = new_q
 
 class TabularQMatrix(QMatrix):
     ''' The discrete, tabular Q-matrix learner
     '''
-    # Override base class abstractmethod
+    # Override
     def _get_q(self, state, action):
         return self._Q.get((state, action), 0)
 
@@ -107,7 +74,7 @@ class KernelSmoothingQMatrix(QMatrix):
         self._kernel_func = kernel_func
         self._sample_size = sample_size
     
-    # Override base class abstractmethod
+    # Override
     def _get_q(self, state, action):        
         if not self._Q:
             return 0
@@ -148,7 +115,7 @@ class DQNLearner(QLearner):
         self._memory = []
         self._model = model # todo, should model be an input?
         
-    # Override base class abstractmethod
+    # Override
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):
         # translate state from tuple to ndarray
         state = np.array(state).reshape(1, len(state))
@@ -197,7 +164,7 @@ class DQNLearner(QLearner):
             self._model.fit(state, target_for_all_a, verbose=0)
         return None
     
-    # Override base class abstractmethod
+    # Override
     def _train_internally(self, reward, new_state):
         if self._last_action is None or self._last_state is None:
             return None
@@ -221,7 +188,7 @@ class SemiGradQLearner(QLearner):
         self._discount_factor = discount_factor
         self._estimator = estimator # the function estimator
     
-    # Override base class abstractmethod
+    # Override
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):        
         if use_epsilon and random.random() < self._epsilon:
             # with probability epsilon, choose from all actions with equal chance
@@ -239,7 +206,7 @@ class SemiGradQLearner(QLearner):
         else:
             return best_action
     
-    # Override base class abstractmethod
+    # Override
     def _train_internally(self, reward, new_state):
         if self._last_action is None or self._last_state is None:
             return None
