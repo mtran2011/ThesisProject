@@ -7,13 +7,13 @@ import random
 class Learner(abc.ABC):
     ''' Abstract base class for a learning agent, either Q-learning or Sarsa
     Attributes:
-        _actions (list): the list of all possible actions it can take
+        _actions (tuple): the list of all possible actions it can take
         _last_action (object): the immediate previous action it took
         _last_state (tuple): to memorize the immediate previous state, for which it took _last_action
     '''
     def __init__(self, actions):
-        if not actions or not isinstance(actions, list):
-            raise ValueError('actions cannot be empty and must be a list')                
+        if not actions or not isinstance(actions, tuple):
+            raise ValueError('actions cannot be empty and must be a tuple')                
         self._actions = actions
         self._last_action = None
         self._last_state = None

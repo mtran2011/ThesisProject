@@ -9,7 +9,7 @@ class Environment(abc.ABC):
         exchange (StockExchange): the exchange
     '''    
 
-    def __init__(self, learner : Learner, exchange : StockExchange):
+    def __init__(self, learner: Learner, exchange: StockExchange):
         self.learner = learner
         self.exchange = exchange
     
@@ -159,6 +159,6 @@ class TwoFeatureOptionHedging(Environment):
                 print('finished {:,} runs'.format(iter_ct))
         
         if report:
-            return deltas, scaled_share_holdings        
+            return deltas, scaled_share_holdings
         else:
             return None

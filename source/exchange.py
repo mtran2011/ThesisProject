@@ -12,7 +12,7 @@ class StockExchange(object):
         num_shares_owned (int): the position the agent has at this exchange        
     '''
     
-    def __init__(self, stock : Stock, lot : int, impact : float, max_holding : int):
+    def __init__(self, stock: Stock, lot: int, impact: float, max_holding: int):
         if impact < 0 or impact > 1:
             raise ValueError('impact must be a float between 0 and 1')
         if lot < 0 or max_holding < 0:
@@ -33,7 +33,7 @@ class StockExchange(object):
         '''
         return self._stock.get_price()
 
-    def execute(self, order : int):
+    def execute(self, order: int):
         ''' Execute the order, set the stock price based on self.impact, then calculate transaction cost        
         Args:
             order (int): how many shares to buy (positive) or sell (negative)
@@ -98,7 +98,7 @@ class OptionHedgingExchange(StockExchange):
         pair (Pair): a pair of option and stock
         num_options (int): number of options held, always constant, never changes
     '''
-    def __init__(self, pair : Pair, lot : int, impact : float, max_holding : int):
+    def __init__(self, pair: Pair, lot: int, impact: float, max_holding: int):
         super().__init__(pair.get_stock(), lot, impact, max_holding)
         self._pair = pair
         self.num_options = max_holding

@@ -12,7 +12,7 @@ class EuropeanOption(object):
         _price (float): the price of this option
         _delta (float): the delta of this option
     '''
-    def __init__(self, stock : GBMStock, strike : float, expiry : int, is_call : bool):
+    def __init__(self, stock: GBMStock, strike: float, expiry: int, is_call: bool):
         if expiry <= 0:
             raise ValueError('original expiry must be positive')
         self.stock = stock
@@ -65,7 +65,7 @@ class Pair(object):
     ''' To wrap an option and the underlying stock 
     Memorize their attributes and report without doing the expensive repricing function
     '''
-    def __init__(self, stock : GBMStock, strike : float, expiry : int, is_call : bool):
+    def __init__(self, stock: GBMStock, strike: float, expiry: int, is_call: bool):
         # to memorize the original attributes of stock and option
         # these attributes should never change throughout the life of this pair object
         self._strike = strike
