@@ -63,7 +63,7 @@ class TabularQMatrix(QMatrix):
         return self._Q.get((state, action), 0)
 
 class KernelSmoothingQMatrix(QMatrix):
-    ''' Use kernel smoothing to estimate Q(s,a) if this has not been found before
+    ''' Use kernel smoothing or local regression to estimate Q(s,a) if this has not been found before
     Attributes:
         _kernel_func (function): to calculate K(x1,x2) = D(||x1-x2||) where x1 = (s1, a1) and x2 = (s2, a2)
         _sample_size (int): how many samples to take from existing Q(s,a) as training data for kernel smoother
