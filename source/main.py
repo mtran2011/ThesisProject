@@ -34,8 +34,8 @@ def make_stock_exchange():
     return actions, exchange
 
 def make_option_exchange():
-    stock = GBMStock(price=50, mu=0.001, sigma=0.01, tick=0.01, band=1000)
-    pair = Pair(stock, strike=50, expiry=126, is_call=True)
+    stock = GBMStock(price=50, mu=0, sigma=0.25/(252**0.5), tick=0.01, band=1000)
+    pair = Pair(stock, strike=50, expiry=252, is_call=True)
     lot = 10
     actions = tuple(range(-5*lot, 6*lot, lot))
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
@@ -85,7 +85,7 @@ def run_qmatrix_stock_trading():
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(150*1e3), 5000
+    util, ntrain, ntest = 1e-3, int(1e2), 100
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
     # for kernel smoothing SARSA using inverse norm-1
