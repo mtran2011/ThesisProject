@@ -8,13 +8,17 @@ class Learner(abc.ABC):
     ''' Abstract base class for a learning agent, either Q-learning or Sarsa
     Attributes:
         _actions (tuple): the list of all possible actions it can take
+        _epsilon (float): constant used in epsilon greedy
+        _count (int): number of learning steps it has done
         _last_action (object): the immediate previous action it took
         _last_state (tuple): to memorize the immediate previous state, for which it took _last_action
     '''
-    def __init__(self, actions):
+    def __init__(self, actions, epsilon):
         if not actions or not isinstance(actions, tuple):
             raise ValueError('actions cannot be empty and must be a tuple')                
         self._actions = actions
+        self._epsilon = epsilon
+        self._count = 2
         self._last_action = None
         self._last_state = None
     
@@ -61,9 +65,8 @@ class MatrixLearner(Learner):
     '''
 
     def __init__(self, actions, epsilon, learning_rate, discount_factor):
-        super().__init__(actions)
-        self._Q = dict()
-        self._epsilon = epsilon
+        super().__init__(actions, epsilon)
+        self._Q = dict()        
         self._learning_rate = learning_rate
         self._discount_factor = discount_factor
     

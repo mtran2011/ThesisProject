@@ -3,6 +3,7 @@
 
 import abc
 import random
+from math import log2
 import numpy as np
 from learner import Learner, MatrixLearner
 
@@ -31,6 +32,10 @@ class SarsaLearner(Learner):
             self._train_internally(reward, next_q)
         self._last_action = action
         self._last_state = new_state
+
+        self._count += 1
+        self._epsilon = min(1 / log2(self._count), self._epsilon)
+
         return action
 
 class SarsaMatrix(MatrixLearner, SarsaLearner):

@@ -124,7 +124,7 @@ class TwoFeatureOptionHedging(Environment):
         self.learner.reset_last_action()
         self.exchange.reset_episode()
 
-        reward = 0        
+        reward = 0
         state = (
             self.exchange.report_stock_price() * self.exchange.num_shares_owned, 
             self.exchange.report_option_price() * self.exchange.num_options)
@@ -160,5 +160,51 @@ class TwoFeatureOptionHedging(Environment):
         
         if report:
             return deltas, scaled_share_holdings
+        else:
+            return None
+
+class GammaScalpingEnvironment(Environment):
+    ''' Try to make money if the option is underpriced using too low implied vol
+    Each state is (option price, stock price, num shares owned)
+    '''
+    # Override base class abstractmethod
+    def run(self, util, nrun, report=False):
+        self.learner.reset_last_action()
+        self.exchange.reset_episode()
+
+        reward = 0
+        state = (
+            self.exchange.report_stock_price(),
+            self.exchange.report_option_price(),
+            self.exchange.num_shares_owned)
+        wealths, wealth = [], 0
+
+        for iter_ct in range(1,nrun+1):            
+            order = self.learner.learn(reward, state)            
+            transaction_cost = self.exchange.execute(order)
+            pnl = self.exchange.simulate_stock_price()
+            # if after 1 step simulation, option.tau = -1, the pnl above is invalid, the reward is invalid
+            # need to reset and do not use the invalid reward for internal learner training
+            if self.exchange.check_option_expired():
+                self.learner.reset_last_action()
+                self.exchange.reset_episode()
+                pnl, transaction_cost = 0, 0
+            
+            delta_wealth = pnl - transaction_cost
+            wealth += delta_wealth
+
+            reward = delta_wealth - 0.5 * util * (delta_wealth - wealth / iter_ct)**2
+            state = (
+                self.exchange.report_stock_price(),
+                self.exchange.report_option_price(),
+                self.exchange.num_shares_owned)
+
+            if report:
+                wealths.append(wealth)
+            if iter_ct % 1000 == 0:
+                print('finished {:,} runs'.format(iter_ct))
+        
+        if report:
+            return wealths
         else:
             return None

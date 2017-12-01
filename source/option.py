@@ -8,18 +8,20 @@ class EuropeanOption(object):
         stock (GBMStock): the underlying stock object
         strike (float): the strike
         tau (int): the remaining time to expiry
+        iv (float): the assumed implied vol used in pricing
         is_call (bool): True if this is a call
         _price (float): the price of this option
         _delta (float): the delta of this option
     '''
-    def __init__(self, stock: GBMStock, strike: float, expiry: int, is_call: bool):
+    def __init__(self, stock: GBMStock, strike: float, expiry: int, iv: float, is_call: bool):
         if expiry <= 0:
             raise ValueError('original expiry must be positive')
         self.stock = stock
-        self.strike = strike        
+        self.strike = strike
         self.tau = expiry
-        self.is_call = is_call        
-                
+        self.iv = iv
+        self.is_call = is_call
+
         self._price = None
         self._delta = None
         self.update_price()        
@@ -49,7 +51,7 @@ class EuropeanOption(object):
                 self._delta = -1 if s < k else 0
             return self._price, self._delta
         
-        sig = self.stock.sigma
+        sig = self.iv
         d1 = (log(s / k) + (r + 0.5 * sig**2) * T) / (sig * T**0.5)
         d2 = d1 - sig * T**0.5
         if self.is_call:
@@ -65,16 +67,17 @@ class Pair(object):
     ''' To wrap an option and the underlying stock 
     Memorize their attributes and report without doing the expensive repricing function
     '''
-    def __init__(self, stock: GBMStock, strike: float, expiry: int, is_call: bool):
+    def __init__(self, stock: GBMStock, strike: float, expiry: int, iv: float, is_call: bool):
         # to memorize the original attributes of stock and option
         # these attributes should never change throughout the life of this pair object
         self._strike = strike
         self._expiry = expiry
-        self._is_call = is_call        
+        self._iv = iv
+        self._is_call = is_call
         self._original_stock_price = stock.get_price()
 
         self._stock = stock
-        self._option = EuropeanOption(self._stock, self._strike, self._expiry, self._is_call)
+        self._option = EuropeanOption(self._stock, self._strike, self._expiry, self._iv, self._is_call)
         
         self._option_price, self._option_delta = self._option.update_price()
     
@@ -87,7 +90,7 @@ class Pair(object):
         ''' Reset option to a new option with the original expiry and reset stock to original price
         '''        
         self._stock.set_price(self._original_stock_price)
-        self._option = EuropeanOption(self._stock, self._strike, self._expiry, self._is_call)
+        self._option = EuropeanOption(self._stock, self._strike, self._expiry, self._iv, self._is_call)
         self._option_price, self._option_delta = self._option.update_price()
 
     def get_option_price(self):
