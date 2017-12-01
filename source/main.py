@@ -85,7 +85,7 @@ def run_qmatrix_stock_trading():
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(1e2), 100
+    util, ntrain, ntest = 1e-3, int(1e6), 1000
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
     # for kernel smoothing SARSA using inverse norm-1
