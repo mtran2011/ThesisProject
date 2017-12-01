@@ -60,7 +60,7 @@ class EuropeanOption(object):
         else:
             self._delta = -norm.cdf(-d1)
             self._price = s * self._delta + k * exp(-r*T) * norm.cdf(-d2)            
-        self._price = round(self._price, {0.01: 2, 0.1: 1, 1: 0}[self.stock.tick])
+        # self._price = round(self._price, {0.01: 2, 0.1: 1, 1: 0}[self.stock.tick])
         return self._price, self._delta
 
 class Pair(object):

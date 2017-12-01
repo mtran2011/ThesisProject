@@ -35,15 +35,15 @@ def make_stock_exchange():
 
 def make_option_exchange():
     stock = GBMStock(price=50, mu=0, sigma=0.25/(252**0.5), tick=0.01, band=1000)
-    pair = Pair(stock, strike=50, expiry=252, is_call=True)
+    pair = Pair(stock, strike=50, expiry=252, iv=stock.sigma, is_call=True)
     lot = 10
     actions = tuple(range(-5*lot, 6*lot, lot))
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
     return actions, exchange
 
 def make_underpriced_option():
-    stock = GBMStock(price=50, mu=0, sigma=0.25, tick=0.01, band=1000)
-    pair = Pair(stock, strike=50, expiry=252, iv=0.25/(252**0.5), is_call=True)
+    stock = GBMStock(price=50, mu=0, sigma=0.1, tick=0.01, band=1500)
+    pair = Pair(stock, strike=50, expiry=252, iv=stock.sigma/5, is_call=True)
     lot = 10
     actions = tuple(range(-5*lot, 6*lot, lot))
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
@@ -64,8 +64,8 @@ def run_qmatrix_stock_trading():
 
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     # for simple TabularQMatrix
-    tabular_qlearner = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
-    environment = StockTradingEnvironment(tabular_qlearner, exchange)
+    tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
+    environment = StockTradingEnvironment(tabular_qmatrix, exchange)
     environment.run(util, ntrain)
     wealths_tabular_qmatrix = environment.run(util, ntest, report=True)
 
@@ -86,9 +86,9 @@ def run_qmatrix_stock_trading():
     inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
     environment = StockTradingEnvironment(inverse_norm_sarsa, exchange)
     environment.run(util, ntrain)
-    wealths_averaging_sarsa = environment.run(util, ntest, report=True)
+    wealths_weighting_sarsa = environment.run(util, ntest, report=True)
 
-    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_averaging_sarsa],
+    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_weighting_sarsa],
                       ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA'], ntrain)
 
 def run_qmatrix_option_hedging():
@@ -107,7 +107,7 @@ def run_qmatrix_option_hedging():
 
 def run_gamma_scalping():
     actions, exchange = make_underpriced_option()
-    util, ntrain, ntest = 1e-3, int(2e5), 5000
+    util, ntrain, ntest = 1e-3, int(1e5), 1000
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
 
     # for kernel smoothing SARSA using inverse norm-1
@@ -115,8 +115,17 @@ def run_gamma_scalping():
     inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
     environment = GammaScalpingEnvironment(inverse_norm_sarsa, exchange)
     environment.run(util, ntrain)
-    wealths = environment.run(util, ntest, report=True)
-    graph_performance([wealths], ['gamma scalping with inverse norm-1 SARSA'], ntrain)
+    wealths_weighting_sarsa = environment.run(util, ntest, report=True)    
+
+    # for tabular q matrix
+    tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
+    environment = GammaScalpingEnvironment(tabular_qmatrix, exchange)
+    environment.run(util, ntrain)
+    wealths_tabular_qmatrix = environment.run(util, ntest, report=True)    
+
+    graph_performance(
+        [wealths_weighting_sarsa, wealths_tabular_qmatrix], 
+        ['gamma scalping with inverse norm-1 SARSA', 'gamma scalping with tabular Q matrix'], ntrain)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()
