@@ -78,9 +78,11 @@ class KernelSmoothingSarsaMatrix(SarsaMatrix):
         batch = random.sample(self._Q.keys(), sample_size)
         X = [[*s, a] for s, a in batch]
         X = np.array(X)
-        Y = np.array([self._Q[key] for key in batch])
+        Y = np.array([self._Q[key] for key in batch]).reshape(len(batch),1)
         self.regressor.fit(X,Y)
 
-        estimate = self.regressor.predict(np.array([*state, action]))
+        # estimate must be a float, scalar
+        x = np.array([*state, action]).reshape(1, len(state)+1)
+        estimate = self.regressor.predict(x)
         self._Q[(state, action)] = estimate
         return estimate

@@ -1,13 +1,13 @@
 import itertools
 from math import log
 import matplotlib.pyplot as plt
-from stock import OUStock, OULogStock, GBMStock
+from stock import OULogStock, GBMStock
 from exchange import StockExchange, OptionHedgingExchange
 from qlearner import TabularQMatrix, KernelSmoothingQMatrix
+from sarsa import TabularSarsaMatrix, KernelSmoothingSarsaMatrix
 from environment import StockTradingEnvironment, TwoFeatureOptionHedging
-from function_estimator import PairwiseLinearEstimator
 from option import EuropeanOption, Pair
-import kernel
+from kernel import InverseNormWeighter
 
 def graph_performance(wealths_list, agent_names, ntrain):
     linestyles = itertools.cycle(['-', '--', '-.', ':'])
@@ -34,8 +34,8 @@ def make_stock_exchange():
     return actions, exchange
 
 def make_option_exchange():
-    stock = GBMStock(price=100, mu=0.001, sigma=0.01, tick=0.01, band=1000)
-    pair = Pair(stock, strike=102, expiry=52, is_call=True)
+    stock = GBMStock(price=50, mu=0.001, sigma=0.01, tick=0.01, band=1000)
+    pair = Pair(stock, strike=50, expiry=126, is_call=True)
     lot = 10
     actions = tuple(range(-5*lot, 6*lot, lot))
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
@@ -62,14 +62,26 @@ def run_qmatrix_stock_trading():
     wealths_tabular_qmatrix = environment.run(util, ntest, report=True)
 
     # for KernelSmoothingQMatrix using inverse L2 distance
-    kernel_func = lambda x1, x2: kernel.inverse_norm_p(x1, x2, p=2)
-    smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel_func, epsilon, learning_rate, discount_factor)
-    environment = StockTradingEnvironment(smoothing_qlearner, exchange)
-    environment.run(util, ntrain)
-    wealths_smoothing_qmatrix = environment.run(util, ntest, report=True)
+    # kernel_func = lambda x1, x2: kernel.inverse_norm_p(x1, x2, p=2)
+    # smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel_func, epsilon, learning_rate, discount_factor)
+    # environment = StockTradingEnvironment(smoothing_qlearner, exchange)
+    # environment.run(util, ntrain)
+    # wealths_smoothing_qmatrix = environment.run(util, ntest, report=True)
 
-    graph_performance([wealths_tabular_qmatrix, wealths_smoothing_qmatrix],
-                      ['tabular Q matrix', 'smoothing Q matrix'], ntrain)
+    tabular_sarsa = TabularSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
+    environment = StockTradingEnvironment(tabular_sarsa, exchange)
+    environment.run(util, ntrain)
+    wealths_tabular_sarsa = environment.run(util, ntest, report=True)
+
+    # for kernel smoothing SARSA using inverse norm
+    inverse_norm_weighter = InverseNormWeighter(p=1)
+    inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
+    environment = StockTradingEnvironment(inverse_norm_sarsa, exchange)
+    environment.run(util, ntrain)
+    wealths_averaging_sarsa = environment.run(util, ntest, report=True)
+
+    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_averaging_sarsa],
+                      ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA '], ntrain)
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
@@ -97,5 +109,5 @@ def run_qmatrix_option_hedging():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    # run_qmatrix_stock_trading()
-    run_qmatrix_option_hedging()
+    run_qmatrix_stock_trading()
+    # run_qmatrix_option_hedging()

@@ -25,10 +25,12 @@ class KernelSmoothingRegressor(abc.ABC):
     @abc.abstractmethod
     def predict(self, X):
         ''' Predict Y for given X
+        Returns:
+            float: must be scalar, the predicted value
         '''
         raise NotImplementedError
 
-class InverseNormAverage(KernelSmoothingRegressor):
+class InverseNormWeighter(KernelSmoothingRegressor):
     ''' Weighted average with inverse distance using norm p = 1 or p = 2
     '''
     def __init__(self, p):
@@ -42,21 +44,11 @@ class InverseNormAverage(KernelSmoothingRegressor):
         if self.X is None or self.Y is None:
             raise ValueError('must have training data first')
         f_vals = []
-        for x0 in X:
+        for i in range(X.shape[0]):
+            x0 = X[i]
             # estimate f(x0)
             d_vals = np.array([1 / np.linalg.norm(x_i - x0, ord=self.p) for x_i in self.X])
+            assert d_vals.shape[0] == self.Y.shape[0]
             f_x0 = np.asscalar(np.dot(d_vals, self.Y) / d_vals.sum())
             f_vals.append(f_x0)
         return np.array(f_vals)
-
-def inverse_norm_p(x1, x2, p=2):
-    '''
-    Args:
-        x1 (list): list of coordinates of the first point
-        x2 (list): list of coordinates of the second point
-    Returns:
-        float: inverse of distance in L-p norm between x1 and x2
-    '''
-    x1 = np.array(x1)
-    x2 = np.array(x2)
-    return 1 / np.linalg.norm(x1 - x2, ord=p)
