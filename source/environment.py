@@ -155,7 +155,7 @@ class TwoFeatureOptionHedging(Environment):
                 self.exchange.report_stock_price() * self.exchange.num_shares_owned, 
                 self.exchange.report_option_price() * self.exchange.num_options)
 
-            if iter_ct % 10000 == 0:
+            if iter_ct % 1000 == 0:
                 print('finished {:,} runs'.format(iter_ct))
         
         if report:

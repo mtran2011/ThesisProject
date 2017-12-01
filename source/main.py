@@ -73,7 +73,7 @@ def run_qmatrix_stock_trading():
     environment.run(util, ntrain)
     wealths_tabular_sarsa = environment.run(util, ntest, report=True)
 
-    # for kernel smoothing SARSA using inverse norm
+    # for kernel smoothing SARSA using inverse norm-1
     inverse_norm_weighter = InverseNormWeighter(p=1)
     inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
     environment = StockTradingEnvironment(inverse_norm_sarsa, exchange)
@@ -81,20 +81,21 @@ def run_qmatrix_stock_trading():
     wealths_averaging_sarsa = environment.run(util, ntest, report=True)
 
     graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_averaging_sarsa],
-                      ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA '], ntrain)
+                      ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA'], ntrain)
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(1e6), 1000
+    util, ntrain, ntest = 1e-3, int(150*1e3), 5000
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
-    # for KernelSmoothingQMatrix using inverse L2 distance
-    kernel_func = lambda x1, x2: kernel.inverse_norm_p(x1, x2, p=2)
-    smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel_func, epsilon, learning_rate, discount_factor)
-    environment = TwoFeatureOptionHedging(smoothing_qlearner, exchange)
+    
+    # for kernel smoothing SARSA using inverse norm-1
+    inverse_norm_weighter = InverseNormWeighter(p=1)
+    inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)    
+    environment = TwoFeatureOptionHedging(inverse_norm_sarsa, exchange)
     environment.run(util, ntrain)
     deltas, scaled_share_holdings = environment.run(util, ntest, report=True)
 
-    graph_performance([deltas, scaled_share_holdings], ['option delta', 'scaled share holding'], ntrain)
+    graph_performance([deltas, scaled_share_holdings], ['option delta', 'scaled share holding of inverse norm-1 SARSA'], ntrain)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()
@@ -109,5 +110,5 @@ def run_qmatrix_option_hedging():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    run_qmatrix_stock_trading()
-    # run_qmatrix_option_hedging()
+    # run_qmatrix_stock_trading()
+    run_qmatrix_option_hedging()
