@@ -84,6 +84,7 @@ class KernelSmoothingSarsaMatrix(SarsaMatrix):
         X = [[*s, a] for s, a in batch]
         X = np.array(X)
         Y = np.array([self._Q[key] for key in batch]).reshape(len(batch),1)
+        assert X.shape[0] == Y.shape[0]
         self.regressor.fit(X,Y)
 
         # estimate must be a float, scalar

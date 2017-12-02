@@ -34,7 +34,7 @@ class Learner(abc.ABC):
             object: the action found by epsilon-greedy
             float: the value Q(s,a) for state s found by epsilon-greedy
         '''
-        raise NotImplementedError('Not implemented at Learner base class')
+        raise NotImplementedError
 
     @abc.abstractmethod
     def learn(self, reward, new_state):
@@ -47,7 +47,7 @@ class Learner(abc.ABC):
         Returns:
             best_action (object): take a new action based on new_state
         '''
-        raise NotImplementedError('Not implemented at Learner base class')
+        raise NotImplementedError
 
     def reset_last_action(self):
         ''' Reset to prepare to play a new episode
@@ -79,7 +79,7 @@ class MatrixLearner(Learner):
         Returns:
             float: the value of Q(s,a). 
         '''
-        raise NotImplementedError('Not implemented at MatrixLearner base class')
+        raise NotImplementedError
         
     # Override base class abstractmethod
     def _find_action_greedily(self, state, use_epsilon=True, return_q=False):
