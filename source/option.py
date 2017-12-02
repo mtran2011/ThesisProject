@@ -44,7 +44,7 @@ class EuropeanOption(object):
         s = self.stock.get_price()
         if T == 0:
             self._price = max(s-k, 0) if self.is_call else max(k-s, 0)
-            self._price = round(self._price, {0.01: 2, 0.1: 1, 1: 0}[self.stock.tick])
+            # self._price = round(self._price, {0.01: 2, 0.1: 1, 1: 0}[self.stock.tick])
             if self.is_call:
                 self._delta = 1 if s > k else 0
             else:

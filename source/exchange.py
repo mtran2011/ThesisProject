@@ -121,6 +121,8 @@ class OptionHedgingExchange(StockExchange):
         '''
         return self._pair.get_option_delta()
     
+    def report 
+
     def check_option_expired(self):
         ''' Return True if the option has already expired
         '''
