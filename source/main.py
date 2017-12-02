@@ -43,7 +43,7 @@ def make_option_exchange():
 
 def make_underpriced_option():
     stock = GBMStock(price=50, mu=0, sigma=0.1, tick=0.01, band=1500)
-    pair = Pair(stock, strike=50, expiry=252, iv=stock.sigma/5, is_call=True)
+    pair = Pair(stock, strike=50, expiry=126, iv=stock.sigma/5, is_call=True)
     lot = 10
     actions = tuple(range(-5*lot, 6*lot, lot))
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
@@ -107,15 +107,15 @@ def run_qmatrix_option_hedging():
 
 def run_gamma_scalping():
     actions, exchange = make_underpriced_option()
-    util, ntrain, ntest = 1e-3, int(1e5), 1000
+    util, ntrain, ntest = 1e-3, int(10e4), 1000
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
 
-    # for kernel smoothing SARSA using inverse norm-1
+    # for kernel smoothing Q-matrix using inverse norm-1
     inverse_norm_weighter = InverseNormWeighter(p=1)
-    inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
-    environment = GammaScalpingEnvironment(inverse_norm_sarsa, exchange)
+    inverse_norm_qmatrix = KernelSmoothingQMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
+    environment = GammaScalpingEnvironment(inverse_norm_qmatrix, exchange)
     environment.run(util, ntrain)
-    wealths_weighting_sarsa = environment.run(util, ntest, report=True)    
+    wealths_weighting_qmatrix = environment.run(util, ntest, report=True)    
 
     # for tabular q matrix
     tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
@@ -124,8 +124,8 @@ def run_gamma_scalping():
     wealths_tabular_qmatrix = environment.run(util, ntest, report=True)    
 
     graph_performance(
-        [wealths_weighting_sarsa, wealths_tabular_qmatrix], 
-        ['gamma scalping with inverse norm-1 SARSA', 'gamma scalping with tabular Q matrix'], ntrain)
+        [wealths_weighting_qmatrix, wealths_tabular_qmatrix], 
+        ['gamma scalping with inverse norm-1 Q-matrix', 'gamma scalping with tabular Q matrix'], ntrain)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()

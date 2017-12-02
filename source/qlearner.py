@@ -70,14 +70,14 @@ class TabularQMatrix(QMatrix):
 class KernelSmoothingQMatrix(QMatrix):
     ''' Use kernel smoothing or local regression to estimate Q(s,a) if this has not been found before
     Attributes:
-        _kernel_func (function): to calculate K(x1,x2) = D(||x1-x2||) where x1 = (s1, a1) and x2 = (s2, a2)
-        _sample_size (int): how many samples to take from existing Q(s,a) as training data for kernel smoother
+        regressor (KernelRegressor): a regressor that can fit(X,Y) and predict(X) using kernel smoothing method
+        sample_size (int): how many samples to take from existing Q(s,a) as training data for kernel smoother
     '''
 
-    def __init__(self, actions, kernel_func, epsilon, learning_rate, discount_factor, sample_size=30):
+    def __init__(self, actions, regressor, epsilon, learning_rate, discount_factor, sample_size=30):
         super().__init__(actions, epsilon, learning_rate, discount_factor)
-        self._kernel_func = kernel_func
-        self._sample_size = sample_size
+        self.regressor = regressor
+        self.sample_size = sample_size
     
     # Override
     def _get_q(self, state, action):        
@@ -88,19 +88,17 @@ class KernelSmoothingQMatrix(QMatrix):
         
         # now that (state, action) is not in Q, try to estimate Q(state, action) via smoothing
         # first sample a training data from existing Q(s,a)
-        sample_size = min(self._sample_size, len(self._Q))
+        sample_size = min(self.sample_size, len(self._Q))
+        # batch is a list of tuple (state, action)
         batch = random.sample(self._Q.keys(), sample_size)
+        X = [[*s, a] for s, a in batch]
+        X = np.array(X)
+        Y = np.array([self._Q[key] for key in batch]).reshape(len(batch),1)        
+        self.regressor.fit(X,Y)
 
-        k_vals, q_vals = [], []
-        x0 = [*state, action] 
-        for that_state, that_action in batch:
-            x2 = [*that_state, that_action]
-            k_vals.append(self._kernel_func(x0, x2))
-            q_vals.append(self._Q[(that_state, that_action)])
-        
-        k_vals = np.array(k_vals)
-        q_vals = np.array(q_vals)
-        estimate = np.asscalar(k_vals.dot(q_vals) / k_vals.sum())
+        # estimate must be a float, scalar
+        x = np.array([*state, action]).reshape(1, len(state)+1)
+        estimate = np.asscalar(self.regressor.predict(x))
         self._Q[(state, action)] = estimate
         return estimate
 

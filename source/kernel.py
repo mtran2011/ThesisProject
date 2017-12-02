@@ -18,7 +18,7 @@ class KernelSmoothingRegressor(abc.ABC):
         '''
         assert isinstance(X, np.ndarray) and isinstance(Y, np.ndarray)
         assert X.shape[0] == Y.shape[0]            
-        assert Y.shape[0] == Y.size
+        assert Y.shape[0] == Y.size and Y.shape[1] == 1
         self.X = X
         self.Y = Y
     
@@ -26,7 +26,7 @@ class KernelSmoothingRegressor(abc.ABC):
     def predict(self, X):
         ''' Predict Y for given X
         Returns:
-            float: must be scalar, the predicted value
+            ndarray: the predicted values
         '''
         raise NotImplementedError
 
@@ -47,7 +47,7 @@ class InverseNormWeighter(KernelSmoothingRegressor):
         for i in range(X.shape[0]):
             x0 = X[i]
             # estimate f(x0)
-            d_vals = np.array([1 / np.linalg.norm(x_i - x0, ord=self.p) for x_i in self.X])
+            d_vals = np.array([1 / np.linalg.norm(x_i-x0, ord=self.p) for x_i in self.X])
             assert d_vals.shape[0] == self.Y.shape[0]
             f_x0 = np.asscalar(np.dot(d_vals, self.Y) / d_vals.sum())
             f_vals.append(f_x0)

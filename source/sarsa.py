@@ -77,18 +77,18 @@ class KernelSmoothingSarsaMatrix(SarsaMatrix):
         if (state, action) in self._Q:
             return self._Q[(state, action)]
         
-        # set up training data for the regressor
+        # now that (state, action) is not in Q, try to estimate Q(state, action) via smoothing
+        # first sample a training data from existing Q(s,a)
         sample_size = min(self.sample_size, len(self._Q))
         # batch is a list of tuple (state, action)
         batch = random.sample(self._Q.keys(), sample_size)
         X = [[*s, a] for s, a in batch]
         X = np.array(X)
-        Y = np.array([self._Q[key] for key in batch]).reshape(len(batch),1)
-        assert X.shape[0] == Y.shape[0]
+        Y = np.array([self._Q[key] for key in batch]).reshape(len(batch),1)        
         self.regressor.fit(X,Y)
 
         # estimate must be a float, scalar
         x = np.array([*state, action]).reshape(1, len(state)+1)
-        estimate = self.regressor.predict(x)
+        estimate = np.asscalar(self.regressor.predict(x))
         self._Q[(state, action)] = estimate
         return estimate

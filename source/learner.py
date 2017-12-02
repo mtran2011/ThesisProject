@@ -3,6 +3,7 @@
 
 import abc
 import random
+import operator
 
 class Learner(abc.ABC):
     ''' Abstract base class for a learning agent, either Q-learning or Sarsa
@@ -18,7 +19,7 @@ class Learner(abc.ABC):
             raise ValueError('actions cannot be empty and must be a tuple')                
         self._actions = actions
         self._epsilon = epsilon
-        self._count = 2
+        self._count = 2 # to avoid divide by zero in log2(count)
         self._last_action = None
         self._last_state = None
     
@@ -92,8 +93,14 @@ class MatrixLearner(Learner):
         else:
             # choose action = arg max {action} of Q(state, action)
             q_values = [self._get_q(state, action) for action in self._actions]
-            max_q = max(q_values)
-            best_action = self._actions[q_values.index(max_q)]
+            index, max_q = max(enumerate(q_values), key=operator.itemgetter(1))
+            
+            # max_q = 0 means this state has never been visited
+            # if so take a random action
+            if max_q == 0:
+                best_action = random.choice(self._actions)
+            else:
+                best_action = self._actions[index]
         
         if return_q:
             return best_action, max_q
