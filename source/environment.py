@@ -176,6 +176,7 @@ class GammaScalpingEnvironment(Environment):
         state = (
             self.exchange.report_stock_price(),
             self.exchange.report_option_price(),
+            self.exchange.report_option_tau(),
             self.exchange.num_shares_owned)
         wealths, wealth = [], 0
 
@@ -197,6 +198,7 @@ class GammaScalpingEnvironment(Environment):
             state = (
                 self.exchange.report_stock_price(),
                 self.exchange.report_option_price(),
+                self.exchange.report_option_tau(),
                 self.exchange.num_shares_owned)
 
             if report:

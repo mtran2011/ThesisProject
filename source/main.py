@@ -33,14 +33,6 @@ def make_stock_exchange():
     exchange = StockExchange(stock, lot=lot, impact=0, max_holding=15*lot)
     return actions, exchange
 
-def make_option_exchange():
-    stock = GBMStock(price=50, mu=0, sigma=0.1, tick=0.01, band=1500)
-    pair = Pair(stock, strike=50, expiry=126, iv=stock.sigma/5, is_call=True)
-    lot = 10
-    actions = tuple(range(-5*lot, 6*lot, lot))
-    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
-    return actions, exchange
-
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
     util, ntrain, ntest = 1e-3, int(1e5), 5000
@@ -82,6 +74,14 @@ def run_qmatrix_stock_trading():
 
     graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_weighting_sarsa],
                       ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA'], ntrain)
+
+def make_option_exchange():
+    stock = GBMStock(price=2000, mu=0, sigma=0.1, tick=0.01, band=50000)
+    pair = Pair(stock, strike=2000, expiry=126, iv=stock.sigma/5, is_call=True)
+    lot = 10
+    actions = tuple(range(-5*lot, 6*lot, lot))
+    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
+    return actions, exchange
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()

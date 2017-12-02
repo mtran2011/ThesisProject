@@ -107,7 +107,12 @@ class Pair(object):
         ''' Return True if this option has expired
         '''
         return self._option.tau < 0
-    
+
+    def get_option_tau(self):
+        ''' Return option remaining time to expiry
+        '''
+        return self._option.tau
+
     def simulate_stock_price(self, dt=1):
         ''' Simulate the stock for one step dt, decrement option.tau, and reprice the option
         Returns:
