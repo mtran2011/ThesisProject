@@ -75,31 +75,31 @@ def run_qmatrix_stock_trading():
     graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_weighting_sarsa],
                       ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA'], ntrain)
 
-def make_option_exchange():
-    stock = GBMStock(price=2000, mu=0, sigma=0.1, tick=0.01, band=50000)
-    pair = Pair(stock, strike=2000, expiry=126, iv=stock.sigma/5, is_call=True)
-    lot = 10
-    actions = tuple(range(-5*lot, 6*lot, lot))
-    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=5*lot)
+def make_underpriced_option():
+    stock = GBMStock(price=250, mu=0, sigma=0.1, tick=0.01, band=25000)
+    pair = Pair(stock, strike=250, expiry=252, iv=stock.sigma/8, is_call=True)
+    lot = 1
+    actions = tuple(range(-10*lot, 11*lot, lot))
+    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=100*lot)
     return actions, exchange
 
-def run_qmatrix_option_hedging():
-    actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(200*1e3), 1000
-    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
+# def run_qmatrix_option_hedging():
+#     actions, exchange = make_option_exchange()
+#     util, ntrain, ntest = 1e-3, int(200*1e3), 1000
+#     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
-    # for kernel smoothing SARSA using inverse norm-1
-    inverse_norm_weighter = InverseNormWeighter(p=1)
-    inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
-    environment = TwoFeatureOptionHedging(inverse_norm_sarsa, exchange)
-    environment.run(util, ntrain)
-    deltas, scaled_share_holdings = environment.run(util, ntest, report=True)
+#     for kernel smoothing SARSA using inverse norm-1
+#     inverse_norm_weighter = InverseNormWeighter(p=1)
+#     inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
+#     environment = TwoFeatureOptionHedging(inverse_norm_sarsa, exchange)
+#     environment.run(util, ntrain)
+#     deltas, scaled_share_holdings = environment.run(util, ntest, report=True)
 
-    graph_performance([deltas, scaled_share_holdings], ['option delta', 'scaled share holding of inverse norm-1 SARSA'], ntrain)
+#     graph_performance([deltas, scaled_share_holdings], ['option delta', 'scaled share holding of inverse norm-1 SARSA'], ntrain)
 
 def run_gamma_scalping():
-    actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(2e4), 5000
+    actions, exchange = make_underpriced_option()
+    util, ntrain, ntest = 1e-3, int(20e3), 4000
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
 
     # for kernel smoothing Q-matrix using inverse norm-1

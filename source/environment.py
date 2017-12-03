@@ -174,8 +174,7 @@ class GammaScalpingEnvironment(Environment):
 
         reward = 0
         state = (
-            self.exchange.report_stock_price(),
-            self.exchange.report_option_price(),
+            self.exchange.report_stock_price(),            
             self.exchange.report_option_tau(),
             self.exchange.num_shares_owned)
         wealths, wealth = [], 0
@@ -196,8 +195,7 @@ class GammaScalpingEnvironment(Environment):
 
             reward = delta_wealth - 0.5 * util * (delta_wealth - wealth / iter_ct)**2
             state = (
-                self.exchange.report_stock_price(),
-                self.exchange.report_option_price(),
+                self.exchange.report_stock_price(),                
                 self.exchange.report_option_tau(),
                 self.exchange.num_shares_owned)
 
