@@ -3,7 +3,7 @@
 import abc
 import numpy as np
 
-class KernelSmoothingRegressor(abc.ABC):
+class Regressor(abc.ABC):
     ''' Abstract base class for a kernel smoothing regressor
     Attributes:
         X (ndarray): array of N x p for N observations, p features
@@ -30,7 +30,7 @@ class KernelSmoothingRegressor(abc.ABC):
         '''
         raise NotImplementedError
 
-class InverseNormWeighter(KernelSmoothingRegressor):
+class InverseNormWeighter(Regressor):
     ''' Weighted average with inverse distance using norm p = 1 or p = 2
     '''
     def __init__(self, p):

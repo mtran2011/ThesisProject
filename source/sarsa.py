@@ -6,6 +6,7 @@ import random
 from math import log2
 import numpy as np
 from learner import Learner, MatrixLearner
+from sklearn.ensemble import RandomForestRegressor
 
 class SarsaLearner(Learner):
     ''' Abstract base class for a Sarsa learner (on policy)
@@ -90,5 +91,38 @@ class KernelSmoothingSarsaMatrix(SarsaMatrix):
         # estimate must be a float, scalar
         x = np.array([*state, action]).reshape(1, len(state)+1)
         estimate = np.asscalar(self.regressor.predict(x))
+        self._Q[(state, action)] = estimate
+        return estimate
+
+class RandomForestSarsaMatrix(SarsaMatrix):
+    ''' Use random forest on a random sample of existing values of Q(s,a) to estimate new Q(s,a)
+    Attributes:
+        sample_size (int): how many samples to take from existing Q(s,a) as training data
+    '''
+    def __init__(self, actions, epsilon, learning_rate, discount_factor):
+        super().__init__(actions, epsilon, learning_rate, discount_factor)
+        self.rf = RandomForestRegressor(
+            n_estimators=10, max_features=1,
+            min_samples_leaf=5, n_jobs=2)
+        self.sample_size = 100
+    
+    # Override
+    def _get_q(self, state, action):
+        if not self._Q:
+            return 0
+        if (state, action) in self._Q:
+            return self._Q[(state, action)]
+        
+        # prepare training data 
+        sample_size = min(self.sample_size, len(self._Q))        
+        batch = random.sample(self._Q.keys(), sample_size)
+        X = [[*s, a] for s, a in batch]
+        X = np.array(X)
+        Y = np.array([self._Q[key] for key in batch])        
+        self.rf.fit(X,Y)
+
+        # now predict on this new (s,a)
+        x = np.array([*state, action]).reshape(1, len(state)+1)
+        estimate = np.asscalar(self.rf.predict(x))
         self._Q[(state, action)] = estimate
         return estimate
