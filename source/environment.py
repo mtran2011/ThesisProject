@@ -115,9 +115,9 @@ class ThreeFeatureOptionHedging(Environment):
         else:
             return None
 
-class TwoFeatureOptionHedging(Environment):
-    ''' Try option hedging with state consisting of only two features
-    Each state is (value of option portfolio, value of stock holdings)
+class OptionHedgingEnvironment(Environment):
+    ''' Environment that provides each state as tuple of three features 
+    Reward is calculated and given to agent to encourage low variance of combined portfolio
     '''
     # Override base class abstractmethod
     def run(self, util, nrun, report=False):
@@ -126,8 +126,9 @@ class TwoFeatureOptionHedging(Environment):
 
         reward = 0
         state = (
-            self.exchange.report_stock_price() * self.exchange.num_shares_owned, 
-            self.exchange.report_option_price() * self.exchange.num_options)
+            self.exchange.report_stock_price(),
+            self.exchange.report_option_tau(),
+            self.exchange.num_shares_owned)
         deltas, scaled_share_holdings = [], []
         
         for iter_ct in range(1,nrun+1):
@@ -137,8 +138,9 @@ class TwoFeatureOptionHedging(Environment):
             
             if report:
                 # compare current delta and the holdings the agent aims at, on the same scale 0-1
+                # for comparison, positive delta means agent should short stock, so negative sign
                 deltas.append(self.exchange.report_option_delta())
-                scaled_share_holdings.append(self.exchange.num_shares_owned / self.exchange.num_options)
+                scaled_share_holdings.append(-self.exchange.num_shares_owned / self.exchange.num_options)
             
             # after order is executed and the agent had aimed for delta, now the stock moves
             # the exchange simulates the stock and calculate pnl from both stock AND option
@@ -150,10 +152,11 @@ class TwoFeatureOptionHedging(Environment):
                 self.learner.reset_last_action()
                 self.exchange.reset_episode()
             
-            reward = -(pnl - transaction_cost)**2
+            reward = -pnl**2 - transaction_cost
             state = (
-                self.exchange.report_stock_price() * self.exchange.num_shares_owned, 
-                self.exchange.report_option_price() * self.exchange.num_options)
+                self.exchange.report_stock_price(),
+                self.exchange.report_option_tau(),
+                self.exchange.num_shares_owned)
 
             if iter_ct % 1000 == 0:
                 print('finished {:,} runs'.format(iter_ct))
@@ -174,7 +177,7 @@ class GammaScalpingEnvironment(Environment):
 
         reward = 0
         state = (
-            self.exchange.report_stock_price(),            
+            self.exchange.report_stock_price(),
             self.exchange.report_option_tau(),
             self.exchange.num_shares_owned)
         wealths, wealth = [], 0

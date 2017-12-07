@@ -5,8 +5,8 @@ from stock import OULogStock, GBMStock
 from exchange import StockExchange, OptionHedgingExchange
 from qlearner import TabularQMatrix, KernelSmoothingQMatrix
 from sarsa import TabularSarsaMatrix, KernelSmoothingSarsaMatrix, RandomForestSarsaMatrix
-from environment import StockTradingEnvironment, TwoFeatureOptionHedging, GammaScalpingEnvironment
-from option import EuropeanOption, Pair
+from environment import StockTradingEnvironment, OptionHedgingEnvironment, GammaScalpingEnvironment
+from option import Pair
 from regressor import InverseNormWeighter
 
 def graph_performance(wealths_list, agent_names, ntrain):
@@ -75,38 +75,39 @@ def run_qmatrix_stock_trading():
     graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_weighting_sarsa],
                       ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA'], ntrain)
 
-def make_underpriced_option():
-    stock = GBMStock(price=250, mu=0, sigma=0.075, tick=0.01, band=int(1e6))
-    pair = Pair(stock, strike=250, expiry=252, iv=stock.sigma/5, is_call=True)
+def make_option_exchange():
+    stock = GBMStock(price=50, mu=0, sigma=0.03, tick=1, band=50)
+    pair = Pair(stock, strike=50, expiry=53, iv=stock.sigma, is_call=True)
     lot = 1
     actions = tuple(range(-5*lot, 6*lot, lot))
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=10*lot)
     return actions, exchange
 
-# def run_qmatrix_option_hedging():
-#     actions, exchange = make_option_exchange()
-#     util, ntrain, ntest = 1e-3, int(200*1e3), 1000
-#     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
-    
-#     for kernel smoothing SARSA using inverse norm-1
-#     inverse_norm_weighter = InverseNormWeighter(p=1)
-#     inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
-#     environment = TwoFeatureOptionHedging(inverse_norm_sarsa, exchange)
-#     environment.run(util, ntrain)
-#     deltas, scaled_share_holdings = environment.run(util, ntest, report=True)
+def make_underpriced_option():
+    stock = GBMStock(price=250, mu=0, sigma=0.03, tick=0.01, band=int(1e6))
+    pair = Pair(stock, strike=250, expiry=252, iv=stock.sigma/2.5, is_call=True)
+    lot = 1
+    actions = tuple(range(-5*lot, 6*lot, lot))
+    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=10*lot)
+    return actions, exchange
 
-#     graph_performance([deltas, scaled_share_holdings], ['option delta', 'scaled share holding of inverse norm-1 SARSA'], ntrain)
+def run_qmatrix_option_hedging():
+    actions, exchange = make_option_exchange()
+    util, ntrain, ntest = 1e-3, int(5e6), 5000
+    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
+    
+    # for tabular Q matrix    
+    tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
+    environment = OptionHedgingEnvironment(tabular_qmatrix, exchange)
+    environment.run(util, ntrain)
+    deltas, scaled_share_holdings = environment.run(util, ntest, report=True)
+
+    graph_performance([deltas, scaled_share_holdings], ['option delta', 'scaled share holding of tabular Q matrix'], ntrain)
 
 def run_gamma_scalping():
     actions, exchange = make_underpriced_option()
-    util, ntrain, ntest = 1e-3, int(1200), 500
+    util, ntrain, ntest = 1e-3, int(5e3), 4*252
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.9999
-
-    # for random forest SARSA
-    rf_sarsa_learner = RandomForestSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
-    environment = GammaScalpingEnvironment(rf_sarsa_learner, exchange)
-    environment.run(util, ntrain)
-    wealths_rf_sarsa = environment.run(util, ntest, report=True)
 
     # for tabular q matrix
     tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
@@ -114,9 +115,15 @@ def run_gamma_scalping():
     environment.run(util, ntrain)
     wealths_tabular_qmatrix = environment.run(util, ntest, report=True)
 
+    # for random forest SARSA
+    rf_sarsa_learner = RandomForestSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
+    environment = GammaScalpingEnvironment(rf_sarsa_learner, exchange)
+    environment.run(util, ntrain)
+    wealths_rf_sarsa = environment.run(util, ntest, report=True)
+
     graph_performance(
-        [wealths_rf_sarsa, wealths_tabular_qmatrix], 
-        ['gamma scalping with random forest SARSA', 'gamma scalping with tabular Q matrix'], ntrain)
+        [wealths_tabular_qmatrix, wealths_rf_sarsa], 
+        ['gamma scalping with tabular Q matrix', 'gamma scalping with random forest SARSA'], ntrain)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()

@@ -102,7 +102,7 @@ class RandomForestSarsaMatrix(SarsaMatrix):
     def __init__(self, actions, epsilon, learning_rate, discount_factor):
         super().__init__(actions, epsilon, learning_rate, discount_factor)
         self.rf = RandomForestRegressor(
-            n_estimators=10, max_features=1,
+            n_estimators=10, max_features=2,
             min_samples_leaf=5, n_jobs=2)
         self.sample_size = 100
     
