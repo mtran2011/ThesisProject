@@ -84,7 +84,7 @@ def make_option_exchange():
     return actions, exchange
 
 def make_underpriced_option():
-    stock = GBMStock(price=1000, mu=0, sigma=0.06, tick=0.01, band=int(1e6))
+    stock = GBMStock(price=1000, mu=0, sigma=0.045, tick=0.01, band=int(1e6))
     pair = Pair(stock, strike=1000, expiry=252, iv=stock.sigma/3, is_call=True)
     lot = 1
     actions = tuple(range(-5*lot, 6*lot, lot))
