@@ -35,7 +35,7 @@ def make_stock_exchange():
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
-    util, ntrain, ntest = 1e-3, int(5e3), 5000
+    util, ntrain, ntest = 1e-3, int(5e3), 2500
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
     # for SemiGradQLearner    
@@ -59,7 +59,7 @@ def run_qmatrix_stock_trading():
     wealths_tabular_sarsa = environment.run(util, ntest, report=True)
 
     # for random forest sarsa
-    rf_sarsa = RandomForestSarsaMatrix(actions, epsilon, learning_rate, discount_factor, max_nfeatures=1)
+    rf_sarsa = RandomForestSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
     environment = StockTradingEnvironment(rf_sarsa, exchange)
     environment.run(util, ntrain)
     wealths_rf_sarsa = environment.run(util, ntest, report=True)
