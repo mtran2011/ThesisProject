@@ -23,19 +23,20 @@ def graph_performance(wealths_list, agent_names, ntrain):
     plt.title('Performance with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
     plt.legend(loc='best')
     plt.xlabel('iterations of testing runs')
-    plt.ylabel('performance measure')
+    plt.ylabel('cumulative wealth from single stock trading')
     plt.savefig('../figs/newfig.png')
 
 def make_stock_exchange():
-    stock = OULogStock(price=10, kappa=0.1, mu=log(15), sigma=0.2, tick=0.1, band=1000)
+    stock = OULogStock(price=50, kappa=0.1, mu=log(75), sigma=0.1, tick=1, band=1000)
     lot = 10
-    actions = tuple(range(-3*lot, 4*lot, lot))
-    exchange = StockExchange(stock, lot=lot, impact=0, max_holding=15*lot)
+    actions = tuple(range(-5*lot, 6*lot, lot))
+    exchange = StockExchange(stock, lot=lot, impact=0, max_holding=100*lot)
     return actions, exchange
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
-    util, ntrain, ntest = 1e-3, int(1e5), 5000
+    util, ntrain, ntest = 1e-3, int(5e3), 5000
+    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
     # for SemiGradQLearner    
     # qfunc_estimator = PairwiseLinearEstimator(num_state_features=2)
@@ -44,36 +45,41 @@ def run_qmatrix_stock_trading():
     # environment.run(util, ntrain)    
     # wealths_semigrad = environment.run(util, ntest, report=True)
     # print(qfunc_estimator.get_params())
-    
 
-    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     # for simple TabularQMatrix
     tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
     environment = StockTradingEnvironment(tabular_qmatrix, exchange)
     environment.run(util, ntrain)
     wealths_tabular_qmatrix = environment.run(util, ntest, report=True)
 
-    # for KernelSmoothingQMatrix using inverse L2 distance
-    # kernel_func = lambda x1, x2: kernel.inverse_norm_p(x1, x2, p=2)
-    # smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel_func, epsilon, learning_rate, discount_factor)
-    # environment = StockTradingEnvironment(smoothing_qlearner, exchange)
-    # environment.run(util, ntrain)
-    # wealths_smoothing_qmatrix = environment.run(util, ntest, report=True)
-
+    # for tabular Sarsa
     tabular_sarsa = TabularSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
     environment = StockTradingEnvironment(tabular_sarsa, exchange)
     environment.run(util, ntrain)
     wealths_tabular_sarsa = environment.run(util, ntest, report=True)
 
-    # for kernel smoothing SARSA using inverse norm-1
-    inverse_norm_weighter = InverseNormWeighter(p=1)
-    inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
-    environment = StockTradingEnvironment(inverse_norm_sarsa, exchange)
+    # for random forest sarsa
+    rf_sarsa = RandomForestSarsaMatrix(actions, epsilon, learning_rate, discount_factor, max_nfeatures=1)
+    environment = StockTradingEnvironment(rf_sarsa, exchange)
     environment.run(util, ntrain)
-    wealths_weighting_sarsa = environment.run(util, ntest, report=True)
+    wealths_rf_sarsa = environment.run(util, ntest, report=True)
 
-    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_weighting_sarsa],
-                      ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA'], ntrain)
+    # for KernelSmoothingQMatrix using inverse L2 distance
+    # kernel_func = lambda x1, x2: kernel.inverse_norm_p(x1, x2, p=2)
+    # smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel_func, epsilon, learning_rate, discount_factor)
+    # environment = StockTradingEnvironment(smoothing_qlearner, exchange)
+    # environment.run(util, ntrain)
+    # wealths_smoothing_qmatrix = environment.run(util, ntest, report=True)   
+
+    # for kernel smoothing SARSA using inverse norm-1
+    # inverse_norm_weighter = InverseNormWeighter(p=1)
+    # inverse_norm_sarsa = KernelSmoothingSarsaMatrix(actions, inverse_norm_weighter, epsilon, learning_rate, discount_factor)
+    # environment = StockTradingEnvironment(inverse_norm_sarsa, exchange)
+    # environment.run(util, ntrain)
+    # wealths_weighting_sarsa = environment.run(util, ntest, report=True)
+
+    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa],
+                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain)
 
 def make_option_exchange():
     stock = GBMStock(price=50, mu=0, sigma=0.03, tick=1, band=20)
@@ -138,6 +144,6 @@ def run_gamma_scalping():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    # run_qmatrix_stock_trading()
-    run_qmatrix_option_hedging()
+    run_qmatrix_stock_trading()
+    # run_qmatrix_option_hedging()
     # run_gamma_scalping()

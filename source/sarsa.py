@@ -99,10 +99,10 @@ class RandomForestSarsaMatrix(SarsaMatrix):
     Attributes:
         sample_size (int): how many samples to take from existing Q(s,a) as training data
     '''
-    def __init__(self, actions, epsilon, learning_rate, discount_factor):
+    def __init__(self, actions, epsilon, learning_rate, discount_factor, max_nfeatures=2):
         super().__init__(actions, epsilon, learning_rate, discount_factor)
         self.rf = RandomForestRegressor(
-            n_estimators=10, max_features=2,
+            n_estimators=10, max_features=max_nfeatures,
             min_samples_leaf=5, n_jobs=2)
         self.sample_size = 100
     
@@ -122,7 +122,13 @@ class RandomForestSarsaMatrix(SarsaMatrix):
         self.rf.fit(X,Y)
 
         # now predict on this new (s,a)
-        x = np.array([*state, action]).reshape(1, len(state)+1)
-        estimate = np.asscalar(self.rf.predict(x))
-        self._Q[(state, action)] = estimate
+        # important note: predict on (state,a) for all a where (state,a) not yet in Q        
+        for a in self._actions:
+            if (state, a) not in self._Q:
+                x = np.array([*state, a]).reshape(1, len(state)+1)
+                estimated_val = np.asscalar(self.rf.predict(x))
+                self._Q[(state, a)] = estimated_val
+                if a == action:
+                    estimate = estimated_val
+        
         return estimate
