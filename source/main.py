@@ -10,7 +10,7 @@ from option import Pair
 from regressor import InverseNormWeighter
 
 def graph_performance(wealths_list, agent_names, ntrain):
-    linestyles = itertools.cycle(['-', '--', '-.', ':'])
+    linestyles = itertools.cycle(['-', ':', '--', '-.'])
     colors = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
     
     plt.figure()
@@ -76,7 +76,7 @@ def run_qmatrix_stock_trading():
                       ['tabular Q matrix', 'tabular SARSA', 'inverse norm-1 weighting SARSA'], ntrain)
 
 def make_option_exchange():
-    stock = GBMStock(price=50, mu=0, sigma=0.03, tick=1, band=50)
+    stock = GBMStock(price=50, mu=0, sigma=0.03, tick=1, band=20)
     pair = Pair(stock, strike=50, expiry=53, iv=stock.sigma, is_call=True)
     lot = 1
     actions = tuple(range(-5*lot, 6*lot, lot))
@@ -93,16 +93,16 @@ def make_underpriced_option():
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(5e6), 5000
-    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
+    util, ntrain, ntest = 1e-3, int(5e6), 10800
+    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.9999
     
     # for tabular Q matrix    
     tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
     environment = OptionHedgingEnvironment(tabular_qmatrix, exchange)
     environment.run(util, ntrain)
-    deltas, scaled_share_holdings = environment.run(util, ntest, report=True)
+    rewards, average_rewards = environment.run(util, ntest, report=True)
 
-    graph_performance([deltas, scaled_share_holdings], ['option delta', 'scaled share holding of tabular Q matrix'], ntrain)
+    graph_performance([rewards, average_rewards], ['one-step reward for tabular Q-matrix', 'average reward for tabular Q-matrix'], ntrain)
 
 def run_gamma_scalping():
     actions, exchange = make_underpriced_option()
@@ -139,5 +139,5 @@ def run_gamma_scalping():
 
 if __name__ == '__main__':
     # run_qmatrix_stock_trading()
-    # run_qmatrix_option_hedging()
-    run_gamma_scalping()
+    run_qmatrix_option_hedging()
+    # run_gamma_scalping()

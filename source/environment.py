@@ -63,58 +63,6 @@ class StockTradingEnvironment(Environment):
         else:
             return None
 
-class ThreeFeatureOptionHedging(Environment):
-    ''' Each state has 3 features (stock price, option price, num shares owned)
-    Attributes:
-        learner (Learner): the agent
-        exchange (OptionHedgingExchange): the exchange for option hedging only
-    '''
-    # Override base class abstractmethod
-    def run(self, util, nrun, report=False):
-        self.learner.reset_last_action()
-        self.exchange.reset_episode()
-
-        reward = 0        
-        state = (
-            self.exchange.report_stock_price(), 
-            self.exchange.report_option_price(), 
-            self.exchange.num_shares_owned)
-        deltas, scaled_share_holdings = [], []
-        
-        for iter_ct in range(1,nrun+1):
-            # order should aim for a total position close to current delta
-            order = self.learner.learn(reward, state)            
-            transaction_cost = self.exchange.execute(order)
-            
-            if report:
-                # compare current delta and the holdings the agent aims at, on the same scale 0-1
-                deltas.append(self.exchange.report_option_delta())
-                scaled_share_holdings.append(self.exchange.num_shares_owned / self.exchange.num_options)
-            
-            # after order is executed and the agent had aimed for delta, now the stock moves
-            # the exchange simulates the stock and calculate pnl from both stock AND option
-            pnl = self.exchange.simulate_stock_price()
-
-            # if after 1 step simulation, option.tau = -1, the pnl above is invalid, the reward is invalid
-            # need to reset and do not use the invalid reward for internal learner training
-            if self.exchange.check_option_expired():
-                self.learner.reset_last_action()
-                self.exchange.reset_episode()
-            
-            reward = -(pnl - transaction_cost)**2
-            state = (
-                self.exchange.report_stock_price(), 
-                self.exchange.report_option_price(), 
-                self.exchange.num_shares_owned)
-
-            if iter_ct % 10000 == 0:
-                print('finished {:,} runs'.format(iter_ct))
-        
-        if report:
-            return deltas, scaled_share_holdings        
-        else:
-            return None
-
 class OptionHedgingEnvironment(Environment):
     ''' Environment that provides each state as tuple of three features 
     Reward is calculated and given to agent to encourage low variance of combined portfolio
@@ -124,45 +72,51 @@ class OptionHedgingEnvironment(Environment):
         self.learner.reset_last_action()
         self.exchange.reset_episode()
 
-        reward = 0
+        reward, rewards = 0, []
+        average_reward, average_rewards = 0, []
         state = (
             self.exchange.report_stock_price(),
             self.exchange.report_option_tau(),
             self.exchange.num_shares_owned)
         deltas, scaled_share_holdings = [], []
-        
+
         for iter_ct in range(1,nrun+1):
             # order should aim for a total position close to current delta
             order = self.learner.learn(reward, state)            
             transaction_cost = self.exchange.execute(order)
-            
+
             if report:
                 # compare current delta and the holdings the agent aims at, on the same scale 0-1
                 # for comparison, positive delta means agent should short stock, so negative sign
                 deltas.append(self.exchange.report_option_delta())
                 scaled_share_holdings.append(-self.exchange.num_shares_owned / self.exchange.num_options)
-            
+
             # after order is executed and the agent had aimed for delta, now the stock moves
             # the exchange simulates the stock and calculate pnl from both stock AND option
             pnl = self.exchange.simulate_stock_price()
+            reward = -pnl**2 - transaction_cost
+            if report:
+                average_reward = (average_reward * (iter_ct-1) + reward) / iter_ct
+                if not self.exchange.check_option_expired():
+                    rewards.append(reward)
+                    average_rewards.append(average_reward)
 
             # if after 1 step simulation, option.tau = -1, the pnl above is invalid, the reward is invalid
             # need to reset and do not use the invalid reward for internal learner training
             if self.exchange.check_option_expired():
                 self.learner.reset_last_action()
                 self.exchange.reset_episode()
-            
-            reward = -pnl**2 - transaction_cost
+
             state = (
                 self.exchange.report_stock_price(),
                 self.exchange.report_option_tau(),
                 self.exchange.num_shares_owned)
 
-            if iter_ct % 1000 == 0:
+            if iter_ct % 10000 == 0:
                 print('finished {:,} runs'.format(iter_ct))
-        
+
         if report:
-            return deltas, scaled_share_holdings
+            return rewards, average_rewards
         else:
             return None
 

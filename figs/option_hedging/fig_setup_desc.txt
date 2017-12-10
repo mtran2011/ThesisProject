@@ -1,0 +1,7 @@
+option_hedging fig setup description
+
+fig1: spot=50, mu=0, sigma=0.03, tick=1, band=20, strike=50, expiry=53, iv=stock.sigma
+    lot=1, actions=range(-5*lot, 6*lot, lot), max_holding=10*lot
+    reward = -pnl**2 - transaction_cost
+fig2: same as fig1, only increased ntest
+fig3: same as fig1, only now we also measure reward not just average reward
