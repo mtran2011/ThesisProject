@@ -55,7 +55,7 @@ class StockTradingEnvironment(Environment):
 
             if report:
                 wealths.append(wealth)
-            if iter_ct % 500 == 0:
+            if iter_ct % 1000 == 0:
                 print('finished {:,} runs'.format(iter_ct))
         
         if report:
