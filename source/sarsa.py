@@ -94,8 +94,10 @@ class KernelSmoothingSarsaMatrix(SarsaMatrix):
         self._Q[(state, action)] = estimate
         return estimate
 
-class RandomForestSarsaMatrix(SarsaMatrix):
+class RandomForestSarsaMatrixVersion1(SarsaMatrix):
     ''' Use random forest on a random sample of existing values of Q(s,a) to estimate new Q(s,a)
+    Each time you see a new state, estimate Q(s,a) for all (s,a) pairs with that state
+    The random forest is first fit on a sample of existing Q, then used to predict new Q
     Attributes:
         sample_size (int): how many samples to take from existing Q(s,a) as training data
     '''
@@ -119,7 +121,7 @@ class RandomForestSarsaMatrix(SarsaMatrix):
         batch = random.sample(self._Q.keys(), sample_size)
         X = [[*s, a] for s, a in batch]
         X = np.array(X)
-        Y = np.array([self._Q[key] for key in batch])        
+        Y = np.array([self._Q[key] for key in batch])
         self.rf.fit(X,Y)
 
         # now predict on this new (s,a)
@@ -133,3 +135,37 @@ class RandomForestSarsaMatrix(SarsaMatrix):
                     estimate = estimated_val
         
         return estimate
+
+class RandomForestSarsaMatrixVersion2(SarsaMatrix):
+    ''' Use random forest on a random sample of existing values of Q(s,a) to estimate new Q(s,a)
+    The change here is that the forest is refitted once every 500 steps to all of existing Q
+    '''
+    def __init__(self, actions, epsilon, learning_rate, discount_factor, max_nfeatures=2):
+        super().__init__(actions, epsilon, learning_rate, discount_factor)
+        self.rf = RandomForestRegressor(
+            n_estimators=30, max_features=max_nfeatures,
+            min_samples_leaf=5, n_jobs=2)
+    
+    # Override
+    def _get_q(self, state, action):
+        # in the first 500 training steps, do not estimate, just default to 0
+        if not self._Q or self._count - 2 < 500:
+            return 0
+        if (state, action) in self._Q:
+            return self._Q[(state, action)]
+        
+        # refit the random forest once every 500 steps
+        if (self._count - 2) % 500 == 0:
+            # prepare training data
+            X, Y = [], []
+            for key, value in self._Q.items():
+                # key is a tuple of (s,a)
+                X.append([*key[0], key[1]])
+                Y.append(value)
+            X = np.array(X)
+            Y = np.array(Y)
+            assert X.shape[0] == Y.shape[0]
+            self.rf.fit(X, Y)
+        # use the random forest to predict Q for this (state, action)
+        x = np.array([*state, action]).reshape(1, len(state)+1)
+        return np.asscalar(self.rf.predict(x))

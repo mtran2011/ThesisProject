@@ -35,7 +35,7 @@ def make_stock_exchange():
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
-    util, ntrain, ntest = 1e-3, int(5e3), 2500
+    util, ntrain, ntest = 1e-3, int(510), 500
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
     # for SemiGradQLearner    
