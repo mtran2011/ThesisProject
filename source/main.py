@@ -9,7 +9,7 @@ from environment import StockTradingEnvironment, OptionHedgingEnvironment, Gamma
 from option import Pair
 from regressor import InverseNormWeighter
 
-def graph_performance(wealths_list, agent_names, ntrain):
+def graph_performance(wealths_list, agent_names, ntrain, version=0):
     linestyles = itertools.cycle(['-', ':', '--', '-.'])
     colors = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
     
@@ -24,7 +24,7 @@ def graph_performance(wealths_list, agent_names, ntrain):
     plt.legend(loc='best')
     plt.xlabel('iterations of testing runs')
     plt.ylabel('cumulative wealth from gamma scalping')
-    plt.savefig('../figs/newfig.png')
+    plt.savefig('../figs/newfig{}.png'.format(version))
 
 def make_stock_exchange():
     stock = OULogStock(price=50, kappa=0.1, mu=log(75), sigma=0.1, tick=1, band=1000)
@@ -149,6 +149,6 @@ def run_gamma_scalping():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    # run_qmatrix_stock_trading()
+    run_qmatrix_stock_trading()
     # run_qmatrix_option_hedging()
-    run_gamma_scalping()
+    # run_gamma_scalping()
