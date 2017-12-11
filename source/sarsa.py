@@ -149,10 +149,12 @@ class RandomForestSarsaMatrixVersion2(SarsaMatrix):
     # Override
     def _get_q(self, state, action):
         # in the first 500 training steps, do not estimate, just default to 0
-        if not self._Q or self._count - 2 < 500:
+        if not self._Q:
             return 0
         if (state, action) in self._Q:
             return self._Q[(state, action)]
+        if self._count - 2 < 500:
+            return 0
         
         # refit the random forest once every 500 steps
         if (self._count - 2) % 500 == 0:
