@@ -5,7 +5,7 @@ fig2a, 2b: same as fig1 but max_holding=100*lot (LARGER STATE SPACE, 100k run no
 fig3: same as fig2, large state space, 5k training surely not enough
 fig4: same as fig3, large state space, 1mil training now works
 fig5a, 5b: same as fig3, 5k train, now try random forest sarsa with m=2, sample=100
-fig6: same as fig3, 5k train, use random forest but do not assign estimate to Q
+fig6: same as fig3, 5k train, use random forest but sample = max of 100 or 1/10 size of Q
 
 option_hedging fig setup description
 fig1: spot=50, mu=0, sigma=0.03, tick=1, band=20, strike=50, expiry=53, iv=stock.sigma

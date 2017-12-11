@@ -114,7 +114,8 @@ class RandomForestSarsaMatrix(SarsaMatrix):
             return self._Q[(state, action)]
         
         # prepare training data 
-        sample_size = min(self.sample_size, len(self._Q))        
+        self.sample_size = max(self.sample_size, len(self._Q) // 10)
+        sample_size = min(self.sample_size, len(self._Q))
         batch = random.sample(self._Q.keys(), sample_size)
         X = [[*s, a] for s, a in batch]
         X = np.array(X)
