@@ -1,3 +1,4 @@
+import sys
 from math import log, exp
 from scipy.stats import norm
 from stock import GBMStock
@@ -52,7 +53,10 @@ class EuropeanOption(object):
             return self._price, self._delta
         
         sig = self.iv
-        d1 = (log(s / k) + (r + 0.5 * sig**2) * T) / (sig * T**0.5)
+        if s == 0:
+            d1 = -sys.maxsize
+        else:
+            d1 = (log(s / k) + (r + 0.5 * sig**2) * T) / (sig * T**0.5)
         d2 = d1 - sig * T**0.5
         if self.is_call:
             self._delta = norm.cdf(d1)
