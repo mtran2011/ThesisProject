@@ -20,10 +20,10 @@ def graph_performance(wealths_list, agent_names, ntrain):
                  color=next(colors))
     
     ntest = len(wealths_list[0])
-    plt.title('Performance with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
+    plt.title('Gamma scalping with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
     plt.legend(loc='best')
     plt.xlabel('iterations of testing runs')
-    plt.ylabel('cumulative wealth from single stock trading')
+    plt.ylabel('cumulative wealth from gamma scalping')
     plt.savefig('../figs/newfig.png')
 
 def make_stock_exchange():
@@ -90,11 +90,11 @@ def make_option_exchange():
     return actions, exchange
 
 def make_underpriced_option():
-    stock = GBMStock(price=1000, mu=0, sigma=0.5, tick=0.01, band=int(1e6))
-    pair = Pair(stock, strike=1000, expiry=252, iv=stock.sigma/2, is_call=True)
+    stock = GBMStock(price=2000, mu=0, sigma=0.045, tick=0.01, band=int(1e6))
+    pair = Pair(stock, strike=2000, expiry=252, iv=stock.sigma*2/3, is_call=True)
     lot = 1
-    actions = tuple(range(-5*lot, 6*lot, lot))
-    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=10*lot)
+    actions = tuple(range(-10*lot, 11*lot, lot))
+    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=20*lot)
     return actions, exchange
 
 def run_qmatrix_option_hedging():
@@ -128,14 +128,13 @@ def run_gamma_scalping():
     wealths_tabular_sarsa = environment.run(util, ntest, report=True)
 
     # for random forest SARSA
-    # rf_sarsa_learner = RandomForestSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
-    # environment = GammaScalpingEnvironment(rf_sarsa_learner, exchange)
-    # environment.run(util, ntrain)
-    # wealths_rf_sarsa = environment.run(util, ntest, report=True)
+    rf_sarsa = RandomForestSarsaMatrixVersion2(actions, epsilon, learning_rate, discount_factor)
+    environment = GammaScalpingEnvironment(rf_sarsa, exchange)
+    environment.run(util, ntrain)
+    wealths_rf_sarsa = environment.run(util, ntest, report=True)
 
-    graph_performance(
-        [wealths_tabular_qmatrix, wealths_tabular_sarsa], 
-        ['gamma scalping with tabular Q matrix', 'gamma scalping with tabular Sarsa'], ntrain)
+    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa],
+                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()
