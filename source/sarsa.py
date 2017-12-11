@@ -164,7 +164,6 @@ class RandomForestSarsaMatrixVersion2(SarsaMatrix):
                 Y.append(value)
             X = np.array(X)
             Y = np.array(Y)
-            assert X.shape[0] == Y.shape[0]
             self.rf.fit(X, Y)
         # use the random forest to predict Q for this (state, action)
         x = np.array([*state, action]).reshape(1, len(state)+1)

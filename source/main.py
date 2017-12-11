@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 from stock import OULogStock, GBMStock
 from exchange import StockExchange, OptionHedgingExchange
 from qlearner import TabularQMatrix, KernelSmoothingQMatrix
-from sarsa import TabularSarsaMatrix, KernelSmoothingSarsaMatrix, RandomForestSarsaMatrix
+from sarsa import TabularSarsaMatrix, KernelSmoothingSarsaMatrix, RandomForestSarsaMatrixVersion1, RandomForestSarsaMatrixVersion2
 from environment import StockTradingEnvironment, OptionHedgingEnvironment, GammaScalpingEnvironment
 from option import Pair
 from regressor import InverseNormWeighter
@@ -35,7 +35,7 @@ def make_stock_exchange():
 
 def run_qmatrix_stock_trading():
     actions, exchange = make_stock_exchange()
-    util, ntrain, ntest = 1e-3, int(510), 500
+    util, ntrain, ntest = 1e-3, int(5e3), 3000
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
     # for SemiGradQLearner    
@@ -58,8 +58,8 @@ def run_qmatrix_stock_trading():
     environment.run(util, ntrain)
     wealths_tabular_sarsa = environment.run(util, ntest, report=True)
 
-    # for random forest sarsa
-    rf_sarsa = RandomForestSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
+    # for random forest sarsa v2
+    rf_sarsa = RandomForestSarsaMatrixVersion2(actions, epsilon, learning_rate, discount_factor)
     environment = StockTradingEnvironment(rf_sarsa, exchange)
     environment.run(util, ntrain)
     wealths_rf_sarsa = environment.run(util, ntest, report=True)
