@@ -23,7 +23,7 @@ def graph_performance(wealths_list, agent_names, ntrain, version=0):
     plt.title('Gamma scalping with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
     plt.legend(loc='best')
     plt.xlabel('iterations of testing runs')
-    plt.ylabel('cumulative wealth from gamma scalping')
+    plt.ylabel('cumulative wealth')
     plt.savefig('../figs/newfig{}.png'.format(version))
 
 def make_stock_exchange():
@@ -149,6 +149,6 @@ def run_gamma_scalping():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    run_qmatrix_stock_trading()
+    # run_qmatrix_stock_trading()
     # run_qmatrix_option_hedging()
-    # run_gamma_scalping()
+    run_gamma_scalping()
