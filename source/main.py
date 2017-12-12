@@ -20,7 +20,7 @@ def graph_performance(wealths_list, agent_names, ntrain, version=0):
                  color=next(colors))
     
     ntest = len(wealths_list[0])
-    plt.title('Gamma scalping with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
+    plt.title('Performance with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
     plt.legend(loc='best')
     plt.xlabel('iterations of testing runs')
     plt.ylabel('cumulative wealth')
@@ -79,7 +79,7 @@ def run_qmatrix_stock_trading():
     # wealths_weighting_sarsa = environment.run(util, ntest, report=True)
 
     graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa],
-                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain)
+                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain, version=0)
 
 def make_option_exchange():
     stock = GBMStock(price=50, mu=0, sigma=0.03, tick=1, band=20)
@@ -134,7 +134,7 @@ def run_gamma_scalping():
     wealths_rf_sarsa = environment.run(util, ntest, report=True)
 
     graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa],
-                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain)
+                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain, version=1)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()
@@ -149,6 +149,6 @@ def run_gamma_scalping():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    # run_qmatrix_stock_trading()
+    run_qmatrix_stock_trading()
     # run_qmatrix_option_hedging()
     run_gamma_scalping()
