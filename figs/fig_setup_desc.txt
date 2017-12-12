@@ -17,3 +17,6 @@ fig1: spot=50, mu=0, sigma=0.03, tick=1, band=20, strike=50, expiry=53, iv=stock
     reward = -pnl**2 - transaction_cost
 fig2: same as fig1, only increased ntest
 fig3: same as fig1, only now we also measure reward not just average reward
+
+gamma_scalping fig setup description
+

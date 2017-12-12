@@ -90,8 +90,8 @@ def make_option_exchange():
     return actions, exchange
 
 def make_underpriced_option():
-    stock = GBMStock(price=2000, mu=0, sigma=0.045, tick=0.01, band=int(1e6))
-    pair = Pair(stock, strike=2000, expiry=252, iv=stock.sigma*2/3, is_call=True)
+    stock = GBMStock(price=int(1e4), mu=0, sigma=0.04, tick=0.01, band=int(1e6))
+    pair = Pair(stock, strike=int(1e4), expiry=252, iv=0.02, is_call=True)
     lot = 1
     actions = tuple(range(-10*lot, 11*lot, lot))
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=20*lot)
@@ -102,7 +102,7 @@ def run_qmatrix_option_hedging():
     util, ntrain, ntest = 1e-3, int(5e6), 10800
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.9999
     
-    # for tabular Q matrix    
+    # for tabular Q matrix
     tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
     environment = OptionHedgingEnvironment(tabular_qmatrix, exchange)
     environment.run(util, ntrain)
@@ -112,7 +112,7 @@ def run_qmatrix_option_hedging():
 
 def run_gamma_scalping():
     actions, exchange = make_underpriced_option()
-    util, ntrain, ntest = 1e-3, int(5e3), 8*253
+    util, ntrain, ntest = 1e-3, int(3e3), 8*253
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
 
     # for tabular q matrix
@@ -135,6 +135,8 @@ def run_gamma_scalping():
 
     graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa],
                       ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain, version=1)
+    # graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa],
+    #                   ['tabular Q matrix', 'tabular Sarsa'], ntrain, version=1)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()
@@ -149,6 +151,6 @@ def run_gamma_scalping():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    run_qmatrix_stock_trading()
+    # run_qmatrix_stock_trading()
     # run_qmatrix_option_hedging()
     run_gamma_scalping()
