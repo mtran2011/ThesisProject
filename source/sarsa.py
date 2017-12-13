@@ -7,6 +7,7 @@ from math import log2
 import numpy as np
 from learner import Learner, MatrixLearner
 from sklearn.ensemble import RandomForestRegressor
+from sklearn.tree import DecisionTreeRegressor
 
 class SarsaLearner(Learner):
     ''' Abstract base class for a Sarsa learner (on policy)
@@ -137,7 +138,7 @@ class RandomForestSarsaMatrixVersion1(SarsaMatrix):
         return estimate
 
 class RandomForestSarsaMatrixVersion2(SarsaMatrix):
-    ''' Use random forest on a random sample of existing values of Q(s,a) to estimate new Q(s,a)
+    ''' Use random forest on all existing values of Q(s,a) to estimate new Q(s,a)
     The change here is that the forest is refitted once every 500 steps to all of existing Q
     '''
     def __init__(self, actions, epsilon, learning_rate, discount_factor, max_nfeatures=2):
@@ -170,3 +171,36 @@ class RandomForestSarsaMatrixVersion2(SarsaMatrix):
         # use the random forest to predict Q for this (state, action)
         x = np.array([*state, action]).reshape(1, len(state)+1)
         return np.asscalar(self.rf.predict(x))
+
+class TreeSarsaMatrix(SarsaMatrix):
+    ''' Use a single tree on all existing values of Q(s,a) to estimate new Q(s,a)
+    The tree is refitted once every 150 learning steps
+    '''
+    def __init__(self, actions, epsilon, learning_rate, discount_factor):
+        super().__init__(actions, epsilon, learning_rate, discount_factor)
+        self.tree = DecisionTreeRegressor(criterion="mae", min_samples_leaf=5)
+    
+    # Override
+    def _get_q(self, state, action):
+        # in the first 150 training steps, do not estimate, just default to 0
+        if not self._Q:
+            return 0
+        if (state, action) in self._Q:
+            return self._Q[(state, action)]
+        if self._count - 2 < 150:
+            return 0
+
+        # refit the tree once every 150 steps
+        if (self._count - 2) % 150 == 0:
+            # prepare training data
+            X, Y = [], []
+            for key, value in self._Q.items():
+                # key is a tuple of (s,a)
+                X.append([*key[0], key[1]])
+                Y.append(value)
+            X = np.array(X)
+            Y = np.array(Y)
+            self.tree.fit(X,Y)
+        # use the tree to predict Q for this (state, action)
+        x = np.array([*state, action]).reshape(1, len(state)+1)
+        return np.asscalar(self.tree.predict(x))

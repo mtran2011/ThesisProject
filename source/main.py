@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 from stock import OULogStock, GBMStock
 from exchange import StockExchange, OptionHedgingExchange
 from qlearner import TabularQMatrix, KernelSmoothingQMatrix
-from sarsa import TabularSarsaMatrix, KernelSmoothingSarsaMatrix, RandomForestSarsaMatrixVersion1, RandomForestSarsaMatrixVersion2
+from sarsa import TabularSarsaMatrix, RandomForestSarsaMatrixVersion2, TreeSarsaMatrix
 from environment import StockTradingEnvironment, OptionHedgingEnvironment, GammaScalpingEnvironment
 from option import Pair
 from regressor import InverseNormWeighter
 
 def graph_performance(wealths_list, agent_names, ntrain, version=0):
     linestyles = itertools.cycle(['-', ':', '--', '-.'])
-    colors = itertools.cycle(['b', 'g', 'r', 'c', 'm', 'y', 'k'])
+    colors = itertools.cycle(['b', 'g', 'r', 'y', 'm', 'c', 'k'])
     
     plt.figure()
     for wealths, agent_name in zip(wealths_list, agent_names):
@@ -64,6 +64,12 @@ def run_qmatrix_stock_trading():
     environment.run(util, ntrain)
     wealths_rf_sarsa = environment.run(util, ntest, report=True)
 
+    # for regression tree sarsa
+    tree_sarsa = TreeSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
+    environment = StockTradingEnvironment(tree_sarsa, exchange)
+    environment.run(util, ntrain)
+    wealths_tree_sarsa = environment.run(util, ntest, report=True)
+
     # for KernelSmoothingQMatrix using inverse L2 distance
     # kernel_func = lambda x1, x2: kernel.inverse_norm_p(x1, x2, p=2)
     # smoothing_qlearner = KernelSmoothingQMatrix(actions, kernel_func, epsilon, learning_rate, discount_factor)
@@ -78,8 +84,8 @@ def run_qmatrix_stock_trading():
     # environment.run(util, ntrain)
     # wealths_weighting_sarsa = environment.run(util, ntest, report=True)
 
-    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa],
-                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain, version=0)
+    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa, wealths_tree_sarsa],
+                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa', 'regression tree Sarsa'], ntrain, version=0)
 
 def make_option_exchange():
     stock = GBMStock(price=50, mu=0, sigma=0.03, tick=1, band=20)
@@ -133,8 +139,14 @@ def run_gamma_scalping():
     environment.run(util, ntrain)
     wealths_rf_sarsa = environment.run(util, ntest, report=True)
 
-    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa],
-                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa'], ntrain, version=1)
+    # for regression tree Sarsa
+    tree_sarsa = TreeSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
+    environment = GammaScalpingEnvironment(tree_sarsa, exchange)
+    environment.run(util, ntrain)
+    wealths_tree_sarsa = environment.run(util, ntest, report=True)
+
+    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa, wealths_tree_sarsa],
+                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa', 'regression tree Sarsa'], ntrain, version=1)
     # graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa],
     #                   ['tabular Q matrix', 'tabular Sarsa'], ntrain, version=1)
 
@@ -151,6 +163,6 @@ def run_gamma_scalping():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    # run_qmatrix_stock_trading()
+    run_qmatrix_stock_trading()
     # run_qmatrix_option_hedging()
     run_gamma_scalping()
