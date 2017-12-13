@@ -38,7 +38,7 @@ def run_qmatrix_stock_trading():
     util, ntrain, ntest = 1e-3, int(5e3), 3000
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
     
-    # for SemiGradQLearner    
+    # for SemiGradQLearner
     # qfunc_estimator = PairwiseLinearEstimator(num_state_features=2)
     # qgrad_learner = SemiGradQLearner(actions, qfunc_estimator, epsilon=0.1, learning_rate=1e-5, discount_factor=0.999)
     # environment = StockTradingEnvironment(qgrad_learner, exchange)
@@ -95,14 +95,6 @@ def make_option_exchange():
     exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=10*lot)
     return actions, exchange
 
-def make_underpriced_option():
-    stock = GBMStock(price=int(1e4), mu=0, sigma=0.04, tick=0.01, band=int(1e6))
-    pair = Pair(stock, strike=int(1e4), expiry=252, iv=0.02, is_call=True)
-    lot = 1
-    actions = tuple(range(-10*lot, 11*lot, lot))
-    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=20*lot)
-    return actions, exchange
-
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
     util, ntrain, ntest = 1e-3, int(5e6), 10800
@@ -116,9 +108,17 @@ def run_qmatrix_option_hedging():
 
     graph_performance([rewards, average_rewards], ['one-step reward for tabular Q-matrix', 'average reward for tabular Q-matrix'], ntrain)
 
+def make_underpriced_option():
+    stock = GBMStock(price=int(1e4), mu=0, sigma=0.04, tick=0.01, band=int(1e6))
+    pair = Pair(stock, strike=int(1e4), expiry=252, iv=0.02, is_call=True)
+    lot = 1
+    actions = tuple(range(-10*lot, 11*lot, lot))
+    exchange = OptionHedgingExchange(pair, lot=lot, impact=0, max_holding=20*lot)
+    return actions, exchange
+
 def run_gamma_scalping():
     actions, exchange = make_underpriced_option()
-    util, ntrain, ntest = 1e-3, int(3e3), 8*253
+    util, ntrain, ntest = 1e-3, int(2e3), 8*253
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
 
     # for tabular q matrix
