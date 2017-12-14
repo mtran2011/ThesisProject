@@ -121,34 +121,35 @@ def run_gamma_scalping():
     util, ntrain, ntest = 1e-3, int(1e3), 8*253
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
 
-    # for tabular q matrix
-    tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
-    environment = GammaScalpingEnvironment(tabular_qmatrix, exchange)
-    environment.run(util, ntrain)
-    wealths_tabular_qmatrix = environment.run(util, ntest, report=True)
+    for x in range(1,6):
+        # for tabular q matrix
+        tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
+        environment = GammaScalpingEnvironment(tabular_qmatrix, exchange)
+        environment.run(util, ntrain)
+        wealths_tabular_qmatrix = environment.run(util, ntest, report=True)
 
-    # for tabular sarsa
-    tabular_sarsa = TabularSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
-    environment = GammaScalpingEnvironment(tabular_sarsa, exchange)
-    environment.run(util, ntrain)
-    wealths_tabular_sarsa = environment.run(util, ntest, report=True)
+        # for tabular sarsa
+        tabular_sarsa = TabularSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
+        environment = GammaScalpingEnvironment(tabular_sarsa, exchange)
+        environment.run(util, ntrain)
+        wealths_tabular_sarsa = environment.run(util, ntest, report=True)
 
-    # for random forest SARSA
-    rf_sarsa = RandomForestSarsaMatrixVersion2(actions, epsilon, learning_rate, discount_factor)
-    environment = GammaScalpingEnvironment(rf_sarsa, exchange)
-    environment.run(util, ntrain)
-    wealths_rf_sarsa = environment.run(util, ntest, report=True)
+        # for random forest SARSA
+        rf_sarsa = RandomForestSarsaMatrixVersion2(actions, epsilon, learning_rate, discount_factor)
+        environment = GammaScalpingEnvironment(rf_sarsa, exchange)
+        environment.run(util, ntrain)
+        wealths_rf_sarsa = environment.run(util, ntest, report=True)
 
-    # for regression tree Sarsa
-    tree_sarsa = TreeSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
-    environment = GammaScalpingEnvironment(tree_sarsa, exchange)
-    environment.run(util, ntrain)
-    wealths_tree_sarsa = environment.run(util, ntest, report=True)
+        # for regression tree Sarsa
+        tree_sarsa = TreeSarsaMatrix(actions, epsilon, learning_rate, discount_factor)
+        environment = GammaScalpingEnvironment(tree_sarsa, exchange)
+        environment.run(util, ntrain)
+        wealths_tree_sarsa = environment.run(util, ntest, report=True)
 
-    graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa, wealths_tree_sarsa],
-                      ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa', 'regression tree Sarsa'], ntrain, version=1)
-    # graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa],
-    #                   ['tabular Q matrix', 'tabular Sarsa'], ntrain, version=1)
+        graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa, wealths_rf_sarsa, wealths_tree_sarsa],
+                        ['tabular Q matrix', 'tabular Sarsa', 'random forest Sarsa', 'regression tree Sarsa'], ntrain, version=x)
+        # graph_performance([wealths_tabular_qmatrix, wealths_tabular_sarsa],
+        #                   ['tabular Q matrix', 'tabular Sarsa'], ntrain, version=1)
 
 # def run_dqn_stock_trading():
 #     actions, exchange = make_stock_exchange()
@@ -163,6 +164,6 @@ def run_gamma_scalping():
 #     graph_performance([wealths], ['simple_dqn_feed_forward'], ntrain)
 
 if __name__ == '__main__':
-    run_qmatrix_stock_trading()
+    # run_qmatrix_stock_trading()
     # run_qmatrix_option_hedging()
     run_gamma_scalping()
