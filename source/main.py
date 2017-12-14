@@ -118,7 +118,7 @@ def make_underpriced_option():
 
 def run_gamma_scalping():
     actions, exchange = make_underpriced_option()
-    util, ntrain, ntest = 1e-3, int(2e3), 8*253
+    util, ntrain, ntest = 1e-3, int(1e3), 8*253
     epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.999
 
     # for tabular q matrix

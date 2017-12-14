@@ -6,9 +6,8 @@ fig2a, 2b: same as fig1 but max_holding=100*lot (LARGER STATE SPACE, 100k run no
 fig3: same as fig2, large state space, 5k training surely not enough
 fig4: same as fig3, large state space, 1mil training now works
 fig5a,b: same as fig3, 5k train, now try random forest sarsa with m=2, sample=100
-fig6a,b,c: same as fig3, 5k train, use random forest but training data = all of Q
-
-
+fig6a,b,c,d: same as fig3, 5k train, use random forest but training data = all of Q
+fig7a,b: same as fig3, now add CART tree 
 
 option_hedging fig setup description
 
@@ -20,3 +19,8 @@ fig3: same as fig1, only now we also measure reward not just average reward
 
 gamma_scalping fig setup description
 
+fig9a-d: stock = GBMStock(price=int(1e4), mu=0, sigma=0.04, tick=0.01, band=int(1e6))
+    pair = Pair(stock, strike=int(1e4), expiry=252, iv=0.02, is_call=True)
+    actions = tuple(range(-10*lot, 11*lot, lot))
+    max_holding=20*lot
+fig10: same as fig9 but add CART
