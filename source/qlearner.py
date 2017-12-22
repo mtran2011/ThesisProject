@@ -40,7 +40,7 @@ class QLearner(Learner):
         self._last_state = new_state
 
         self._count += 1
-        self._epsilon = min(1 / log2(self._count), self._epsilon)
+        self._epsilon = min(1 / self._count, self._epsilon)
 
         return action
 

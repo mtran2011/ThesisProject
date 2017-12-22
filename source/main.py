@@ -97,16 +97,18 @@ def make_option_exchange():
 
 def run_qmatrix_option_hedging():
     actions, exchange = make_option_exchange()
-    util, ntrain, ntest = 1e-3, int(5e6), 10800
-    epsilon, learning_rate, discount_factor = 0.1, 0.5, 0.9999
+    util, ntrain, ntest = 1e-3, int(10e6), 10800
+    epsilon, learning_rate, discount_factor = 0.2, 0.5, 0.9999
     
     # for tabular Q matrix
     tabular_qmatrix = TabularQMatrix(actions, epsilon, learning_rate, discount_factor)
     environment = OptionHedgingEnvironment(tabular_qmatrix, exchange)
     environment.run(util, ntrain)
-    rewards, average_rewards = environment.run(util, ntest, report=True)
+    rewards, average_rewards, wealths = environment.run(util, ntest, report=True)
 
-    graph_performance([rewards, average_rewards], ['one-step reward for tabular Q-matrix', 'average reward for tabular Q-matrix'], ntrain)
+    graph_performance(
+        [rewards, average_rewards, wealths], 
+        ['one-step reward for tabular Q', 'average reward for tabular Q', 'cumulative wealth for tabular Q'], ntrain)
 
 def make_underpriced_option():
     stock = GBMStock(price=int(1e4), mu=0, sigma=0.04, tick=0.01, band=int(1e6))
@@ -165,5 +167,5 @@ def run_gamma_scalping():
 
 if __name__ == '__main__':
     # run_qmatrix_stock_trading()
-    # run_qmatrix_option_hedging()
-    run_gamma_scalping()
+    run_qmatrix_option_hedging()
+    # run_gamma_scalping()

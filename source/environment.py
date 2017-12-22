@@ -78,28 +78,32 @@ class OptionHedgingEnvironment(Environment):
             self.exchange.report_stock_price(),
             self.exchange.report_option_tau(),
             self.exchange.num_shares_owned)
-        deltas, scaled_share_holdings = [], []
+        # deltas, scaled_share_holdings = [], []
+        wealths, wealth = [], 0
 
         for iter_ct in range(1,nrun+1):
             # order should aim for a total position close to current delta
             order = self.learner.learn(reward, state)            
             transaction_cost = self.exchange.execute(order)
 
-            if report:
+            # if report:
                 # compare current delta and the holdings the agent aims at, on the same scale 0-1
                 # for comparison, positive delta means agent should short stock, so negative sign
-                deltas.append(self.exchange.report_option_delta())
-                scaled_share_holdings.append(-self.exchange.num_shares_owned / self.exchange.num_options)
+                # deltas.append(self.exchange.report_option_delta())
+                # scaled_share_holdings.append(-self.exchange.num_shares_owned / self.exchange.num_options)
 
             # after order is executed and the agent had aimed for delta, now the stock moves
             # the exchange simulates the stock and calculate pnl from both stock AND option
             pnl = self.exchange.simulate_stock_price()
             reward = -pnl**2 - transaction_cost
-            if report:
-                average_reward = (average_reward * (iter_ct-1) + reward) / iter_ct
+            if report:                
                 if not self.exchange.check_option_expired():
+                    average_reward = (average_reward * (iter_ct-1) + reward) / iter_ct
                     rewards.append(reward)
                     average_rewards.append(average_reward)
+
+                    wealth += pnl - transaction_cost
+                    wealths.append(wealth)
 
             # if after 1 step simulation, option.tau = -1, the pnl above is invalid, the reward is invalid
             # need to reset and do not use the invalid reward for internal learner training
@@ -116,7 +120,7 @@ class OptionHedgingEnvironment(Environment):
                 print('finished {:,} runs'.format(iter_ct))
 
         if report:
-            return rewards, average_rewards
+            return rewards, average_rewards, wealths
         else:
             return None
 
