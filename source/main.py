@@ -23,7 +23,7 @@ def graph_performance(wealths_list, agent_names, ntrain, version=0):
     plt.title('Performance with ntrain = {0:,} and ntest = {1:,}'.format(ntrain, ntest))
     plt.legend(loc='best')
     plt.xlabel('iterations of testing runs')
-    plt.ylabel('cumulative wealth')
+    plt.ylabel('performance measure')
     plt.savefig('../figs/newfig{}.png'.format(version))
 
 def make_stock_exchange():
