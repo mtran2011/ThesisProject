@@ -79,7 +79,7 @@ class OptionHedgingEnvironment(Environment):
             self.exchange.report_option_tau(),
             self.exchange.num_shares_owned)
         # deltas, scaled_share_holdings = [], []
-        wealths, wealth = [], 0
+        pnls, cumulative_pnl = [], 0
 
         for iter_ct in range(1,nrun+1):
             # order should aim for a total position close to current delta
@@ -101,9 +101,8 @@ class OptionHedgingEnvironment(Environment):
                     average_reward = (average_reward * (iter_ct-1) + reward) / iter_ct
                     rewards.append(reward)
                     average_rewards.append(average_reward)
-
-                    wealth += pnl - transaction_cost
-                    wealths.append(wealth)
+                    cumulative_pnl += pnl
+                    pnls.append(cumulative_pnl)
 
             # if after 1 step simulation, option.tau = -1, the pnl above is invalid, the reward is invalid
             # need to reset and do not use the invalid reward for internal learner training
@@ -120,7 +119,7 @@ class OptionHedgingEnvironment(Environment):
                 print('finished {:,} runs'.format(iter_ct))
 
         if report:
-            return rewards, average_rewards, wealths
+            return rewards, average_rewards, pnls
         else:
             return None
 

@@ -108,7 +108,7 @@ def run_qmatrix_option_hedging():
 
     graph_performance(
         [rewards, average_rewards, wealths], 
-        ['one-step reward for tabular Q', 'average reward for tabular Q', 'cumulative wealth for tabular Q'], ntrain)
+        ['one-step reward for tabular Q', 'average reward for tabular Q', 'cumulative PnL for tabular Q'], ntrain)
 
 def make_underpriced_option():
     stock = GBMStock(price=int(1e4), mu=0, sigma=0.04, tick=0.01, band=int(1e6))
